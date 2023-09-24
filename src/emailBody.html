@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+        th {
+            background-color: #4b3a71;
+            color: white;
+        }
+    </style>
+  </head>
+  <body>
+    <p>Hi there,</p>
+    <p>Find below the Attendance sheets for upcoming courses.</p>
+    <table>
+        <tr>
+            <th>Course</th>
+            <th>Location</th>
+            <th>Tutor</th>
+            <th>Attendance Sheet</th>
+        </tr>
+        <? for(i=0; i<messageContent.urls.length; i++){ ?>
+        <tr>
+            <td><?= messageContent.courseName[i];?></td>
+            <td><?= messageContent.locations[i];?></td>
+            <td><?= messageContent.tutor[i];?></td>
+            <td><a href="<?= messageContent.urls[i];?>">Sheet Link</a></td>
+        </tr>
+        <? } ?>
+    </table> 
+    <p>Yours</p>
+    <p>The NCU Team</p>
+  </body>
+</html>

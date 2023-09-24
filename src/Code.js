@@ -1,40 +1,8 @@
-function mockClass() {
-  class CourseDetails {
-  constructor(moduleName, duration, deliveryMode, sessionsPerWeek, tutorName, studentDetails) {
-      this.moduleName = moduleName;
-      this.duration = duration;
-      this.sessionsPerWeek = sessionsPerWeek;
-      this.tutorName = tutorName;
-      this.studentDetails = studentDetails;
-      this.deliveryMode = deliveryMode
-    }
-    totalSessions(){
-      total = this.sessionsPerWeek*this.duration;
-      return total;
-    }
-  }
-  const student1 = {
-    name: "Seán O'Brien",
-    email: "sean.obrien@ncutraining.ie"
-  }
-  const student2 = {
-    name: "Catherine Keegan",
-    email: "catherine@blah.com"
-  }
-  const mockStudents = [student1, student2];
-  const moduleName = "Hard Knocks 101"; 
-  const duration = 8;
-  const sessionCount = 2;
-  const tutorName = "Suzanne";
-  const studentDetails = mockStudents;
-  const deliveryMode = "On Site in Glin Centre"
-  const course = new CourseDetails(moduleName, duration, deliveryMode, sessionCount, tutorName, studentDetails)
-  return course;
-}
+//import "google-apps-script";
 
-function buildAttendanceSheet() {
+function buildAttendanceSheet(course) {
   const date = new Date();
-  const course = mockClass();
+  //const course = mockClass();
   const ss = SpreadsheetApp.create(course.moduleName);
   const sheet = ss.insertSheet("CourseTitle");
 
@@ -169,5 +137,187 @@ function buildAttendanceSheet() {
   const destinationFolderId = "1fv7VcfjvOrfw7EmXPowwsH5XGFPJTIs_";
   const destinationFolder = DriveApp.getFolderById(destinationFolderId);
   const opSheet = DriveApp.getFileById(ss.getId());
+  const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(destinationFolder);
+  return opSheetUrl;
+}
+
+function extractName(input) {
+  // Split the input into lines
+  var lines = input.split('\n');
+
+  // Initialize the name variable
+  var name = "Name not found";
+
+  // Loop through the lines to find the name
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+
+    // Check if the line is not empty and does not start with ###
+    if (line && !line.startsWith("###")) {
+      name = line;
+      break; // Exit the loop after finding the name
+    }
+  }
+
+  return name;
+}
+
+function extractEmail(input) {
+  // Split the input into lines
+  var lines = input.split('\n');
+
+  // Initialize the email variable
+  var email = "Email not found";
+
+  // Loop through the lines to find the email
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+
+    // Check if the line contains "@" to identify an email
+    if (line.includes("@")) {
+      email = line;
+      break; // Exit the loop after finding the email
+    }
+  }
+
+  return email;
+}
+
+function buildCourse(ssId){
+  class CourseDetails {
+  constructor(moduleName, duration, deliveryMode, sessionsPerWeek, tutorName, studentDetails) {
+      this.moduleName = moduleName;
+      this.duration = duration;
+      this.sessionsPerWeek = sessionsPerWeek;
+      this.tutorName = tutorName;
+      this.studentDetails = studentDetails;
+      this.deliveryMode = deliveryMode
+    }
+    totalSessions(){
+      total = this.sessionsPerWeek*this.duration;
+      return total;
+    }
+  }
+  const ss = SpreadsheetApp.openById(ssId);
+  const sheet = ss.getSheetByName("Main");
+  Logger.log(sheet)
+  const data = sheet.getDataRange().getValues();
+  //missing variables
+  const duration = 4;
+  const sessionsPerWeek = 2;
+  //find indexes for required fields
+  let courseIndex, participantIndex, locationIndex, tutorIndex, firstNameIndex;
+  for(i in data[0]){
+    if(data[0][i].includes("Course")){courseIndex = Number(i)}
+    if(data[0][i].includes("Participants (details)")){participantIndex = Number(i)}
+    if(data[0][i].includes("Location")){locationIndex = Number(i)}
+    if(data[0][i].includes("Tutor")){tutorIndex = Number(i)}
+    if(data[0][i].includes("First name (participant)")){firstNameIndex = Number(i)}
+    if(data[0][i].includes("Last name (participant)")){lastNameIndex = Number(i)}
+    if(data[0][i].includes("Email address (participant)")){emailIndex = Number(i)}
+  }
+  data.shift(); //drop header row
+  //find all courses on this date
+  const courseNames = [];
+  const courses = [];
+  for(row of data){
+    if(courseNames.indexOf(row[courseIndex]) == -1){
+      Logger.log("New course "+row[courseIndex]+" Being Created")
+      let student = {
+        name: row[firstNameIndex]+" "+row[lastNameIndex],
+        email: row[emailIndex]
+      };
+      courseNames.push(row[courseIndex]);
+      let course = new CourseDetails(
+        row[courseIndex],
+        4,
+        row[locationIndex],
+        2,
+        row[tutorIndex],
+        [student]
+      );
+      courses.push(course);
+    }
+    else{
+      let course;
+      for(line of courses){
+        Logger.log("Checking "+line.moduleName);
+        if(line.moduleName == row[courseIndex]){
+          course = line;
+          student = {
+            name: row[firstNameIndex]+" "+row[lastNameIndex],
+            email: row[emailIndex]
+          };
+          course.studentDetails.push(student);
+        }
+      }
+    }
+  }
+  return(courses);
+}
+
+function convertExcelToGoogleSheets(xlsId) {
+  let file = DriveApp.getFileById(xlsId);
+  let blob = file.getBlob();
+  let folder = "16L0EUJ4KPhnu9TfTqMURR4AuKLfDiUeW";
+  let config = {
+    title: "[Google Sheets] " + file.getName(),
+    parents: [{id: folder}],
+    mimeType: MimeType.GOOGLE_SHEETS
+  };
+  let spreadsheet = Drive.Files.insert(config, blob);
+  return spreadsheet.id;
+}
+
+function processUpload(e){
+  Logger.log(e.values);
+  const xlsUrl = e.values[2];
+  const email = e.values[1];
+  const xlsId = xlsUrl.substring(33, xlsUrl.length);
+  const ssId = convertExcelToGoogleSheets(xlsId);
+  let courses = buildCourse(ssId);
+  let opSheets = [];
+  for(course of courses){
+    let opSheet = buildAttendanceSheet(course);
+    let opCourse = {
+      course: course,
+      sheet: opSheet
+    };
+    opSheets.push(opCourse);
+  }
+  emailAttendanceSheets(email, opSheets);
+}
+
+function emailAttendanceSheets(email, opSheets){
+  Logger.log("Emailing Results to "+ email);
+  Logger.log(opSheets);
+  let template = HtmlService.createTemplateFromFile("emailBody");
+  const urls = [];
+  const locations = [];
+  const tutor = [];
+  const courseName = [];
+  for(i in opSheets){
+    urls.push(opSheets[i].sheet);
+    locations.push(opSheets[i].course.deliveryMode);
+    tutor.push(opSheets[i].course.tutorName);
+    courseName.push(opSheets[i].course.moduleName);
+  }
+  Logger.log(urls);
+  const messageContent = {
+    urls: urls,
+    locations: locations,
+    tutor: tutor,
+    courseName: courseName
+  }
+  Logger.log(messageContent)
+  template.messageContent = messageContent;
+  const message = template.evaluate().getContent();
+  const mail = {
+    to: email,
+    replyTo: "info@ncultd.ie",
+    subject: "Upcoming Course Attendance Sheets",
+    htmlBody: message
+  }
+  MailApp.sendEmail(mail);
 }
