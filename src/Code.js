@@ -7,13 +7,13 @@ function buildAttendanceSheet(course) {
   const sheet = ss.insertSheet("CourseTitle");
 
   //Course Header
-  sheet.getRange(1,1).setValue("Live Leaner Register "+date.getFullYear())
+  sheet.getRange(1,3).setValue("Live Leaner Register "+date.getFullYear())
                      .setHorizontalAlignment("center")
                      .setBackground("#4B3A71")
                      .setFontSize(18)
                      .setFontColor("#FFFFFF")
                      .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange(1,1,1,14).merge();
+  sheet.getRange(1,2,1,14).merge();
   //tutor name
   sheet.getRange(2,1).setValue("Tutor Name")
                      .setBackground("#8EE4F3")
@@ -117,21 +117,21 @@ function buildAttendanceSheet(course) {
     studentRow++
   }
   //course footer
-  //Course Header
-  sheet.getRange(studentRow,1).setValue("Additional Tutor or Sales Team Comments")
+  sheet.getRange(studentRow,2).setValue("Additional Tutor or Sales Team Comments")
                      .setHorizontalAlignment("center")
                      .setBackground("#4B3A71")
                      .setFontSize(18)
                      .setFontColor("#FFFFFF")
                      .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange(studentRow,1,1,14).merge();
-  sheet.getRange(studentRow+1,1).setValue(" ")
+  sheet.getRange(studentRow,2,1,14).merge();
+  sheet.getRange(studentRow+1,2).setValue(" ")
                      .setHorizontalAlignment("center")
                      .setBackground("#FFFFFF")
                      .setFontSize(18)
                      .setFontColor("#000000")
                      .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange(studentRow+1,1,6,14).merge();
+  sheet.getRange(studentRow+1,2,6,14).merge();
+  sheet.setFrozenColumns(1);
   //Clean Up
   ss.moveActiveSheet(0);
   const destinationFolderId = "1fv7VcfjvOrfw7EmXPowwsH5XGFPJTIs_";
