@@ -1,5 +1,10 @@
 //import "google-apps-script";
 
+function testCreation(){
+  const course = mockClass();
+  buildAttendanceSheet(course);
+}
+
 function buildAttendanceSheet(course) {
   const date = new Date();
   //const course = mockClass();
@@ -139,6 +144,7 @@ function buildAttendanceSheet(course) {
   const opSheet = DriveApp.getFileById(ss.getId());
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(destinationFolder);
+  createChainOfCustody(SpreadsheetApp.openById(opSheet.getId()), course);
   return opSheetUrl;
 }
 
@@ -320,4 +326,155 @@ function emailAttendanceSheets(email, opSheets){
     htmlBody: message
   }
   MailApp.sendEmail(mail);
+}
+
+function createChainOfCustody(ss, course){
+  const cocSheet = ss.insertSheet("Chain of Custody");
+  //Add Document Header
+  
+  let startRow = 2;
+  //First Row / Title
+  cocSheet.getRange(startRow,1).setValue("Assignment Chain of Custody")
+                        .setFontSize(20)
+                        .setHorizontalAlignment("center");
+  cocSheet.getRange(startRow,1,1,10).merge();
+  startRow++;
+
+  //Logo
+  const logoUrl = "https://lickylip.net/wp-content/uploads/2023/09/21-small.png";
+  const image = SpreadsheetApp.newCellImage()
+                              .setSourceUrl(logoUrl)
+                              .build();
+  cocSheet.getRange(startRow,1).setValue(image)
+                               .setHorizontalAlignment("center");
+  cocSheet.setRowHeight(startRow, 100);
+   cocSheet.getRange(startRow,1, 1, 10).merge();
+  startRow++
+
+  //Title, Date, QQI Code
+  cocSheet.getRange(startRow,1).setValue("Course Title: ");
+  cocSheet.getRange(startRow,2).setValue(course.moduleName);
+  cocSheet.getRange(startRow,2,1,3).merge();
+  cocSheet.getRange(startRow,6).setValue("QQI Code: ");
+  //TODO: Implement QQI code in course creation
+  cocSheet.getRange(startRow,7).setValue("{{Implement QQI Code}}");
+  cocSheet.getRange(startRow,7,1,3).merge();
+
+  startRow++;
+  //Start date and tutor name & signature
+  cocSheet.getRange(startRow,1).setValue("Start Date:");
+  //TODO: Implement Start date in Course Creation
+  cocSheet.getRange(startRow,2).setValue("{{Start Date}}");
+  cocSheet.getRange(startRow,2,1,3).merge();
+  cocSheet.getRange(startRow,6).setValue("Tutor Signature:")
+  cocSheet.getRange(startRow,7).setValue("___________________");
+  cocSheet.getRange(startRow,7,1,3).merge();
+  startRow++;
+  
+  cocSheet.getRange(startRow,7).setValue(course.moduleName);
+  cocSheet.getRange(startRow,7,1,3).merge();
+  startRow++;
+
+  //Instruction on block caps
+  cocSheet.getRange(startRow,1).setValue("PLEASE WRITE FULL NAME IN BLOCK CAPITALS")
+          .setHorizontalAlignment("center");
+  cocSheet.getRange(startRow,1,1,10).merge();
+  startRow++;
+
+  //Clear boarders first
+  cocSheet.getRange(1,1,cocSheet.getLastRow(),cocSheet.getLastColumn())
+          .setBorder(false, false, false, false, false, false);
+
+  //Column Headers
+  const borderStyle = SpreadsheetApp.BorderStyle.SOLID;
+  const borderColor = "#4B3A71";
+  const borderWidth = 1;
+  cocSheet.getRange(startRow,1).setValue("Number")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID)
+  cocSheet.getRange(startRow,2).setValue("Student Name")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,3).setValue("Assignement Signed In")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,4).setValue("Date")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,5).setValue("Tutor Assignment Collection (Y/N)")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,6).setValue("Date")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,7).setValue("Turor Returned Assignment (Y/N)")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,8).setValue("Date")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,9).setValue("QQI Certificate Collected (Please Sign)")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  cocSheet.getRange(startRow,10).setValue("Date")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  startRow++;
+  //Student rows
+  for(i=0; i<course.studentDetails.length; i++){
+    cocSheet.getRange(startRow, 1).setValue(i+1)
+                                  .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    cocSheet.getRange(startRow, 2).setValue(course.studentDetails[i].name)
+                                  .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    cocSheet.getRange(startRow,3,1,8).setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID)
+    startRow++;
+  }
+  cocSheet.autoResizeColumn(2);
+  cocSheet.getRange(1,1,cocSheet.getLastRow(),cocSheet.getLastColumn())
+          .setFontColor("#4B3A71");
+  cocSheet.setHiddenGridlines(true);
+}
+
+function mockClass() {
+  class CourseDetails {
+  constructor(moduleName, duration, deliveryMode, sessionsPerWeek, tutorName, studentDetails) {
+      this.moduleName = moduleName;
+      this.duration = duration;
+      this.sessionsPerWeek = sessionsPerWeek;
+      this.tutorName = tutorName;
+      this.studentDetails = studentDetails;
+      this.deliveryMode = deliveryMode
+    }
+    totalSessions(){
+      total = this.sessionsPerWeek*this.duration;
+      return total;
+    }
+  }
+  const student1 = {
+    name: "Seán O'Brien",
+    email: "sean.obrien@ncutraining.ie"
+  }
+  const student2 = {
+    name: "Catherine Keegan",
+    email: "catherine@blah.com"
+  }
+  const mockStudents = [student1, student2];
+  const moduleName = "Hard Knocks 101"; 
+  const duration = 8;
+  const sessionCount = 2;
+  const tutorName = "Suzanne";
+  const studentDetails = mockStudents;
+  const deliveryMode = "On Site in Glin Centre"
+  const course = new CourseDetails(moduleName, duration, deliveryMode, sessionCount, tutorName, studentDetails)
+  return course;
 }
