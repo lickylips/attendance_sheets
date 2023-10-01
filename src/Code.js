@@ -12,6 +12,7 @@ function buildAttendanceSheet(course) {
   const sheet = ss.insertSheet("CourseTitle");
 
   //Course Header
+  sheet.getRange(1,1).setBackground("#4B3A71");
   sheet.getRange(1,3).setValue("Live Leaner Register "+date.getFullYear())
                      .setHorizontalAlignment("center")
                      .setBackground("#4B3A71")
@@ -68,60 +69,52 @@ function buildAttendanceSheet(course) {
   sheet.getRange(3,3,4).merge();
   //weeks and sessions
   let startCol = 4;
-  let sessionNumber = 1;
-  //weeks
-  for(i=0; i<course.duration; i++){
-    let weekNumber = i+1;
-    let weekRange = sheet.getRange(3, startCol);
-    let mergeRange = sheet.getRange(3, startCol, 1, course.sessionsPerWeek+1);    
-    weekRange.setValue("Week "+weekNumber)
-             .setBackground("#0073DB")
-             .setHorizontalAlignment("center")
-             .setFontColor("#FFFFFF")
-             .setFontWeight("bold")
-             .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  let numberOfSessions = course.sessions();
+  Logger.log("Course ID: "+ course.courseId());
+  Logger.log("Number of Sessions: "+numberOfSessions);
+  //Sessions
+  Logger.log(numberOfSessions);
+  for(i=0; i<numberOfSessions; i++){
+    let sessionNumber = i+1;
+    let sessionRange = sheet.getRange(3, startCol);
+    sessionRange.setValue("Session "+sessionNumber)
+                .setBackground("#0073DB")
+                .setHorizontalAlignment("center")
+                .setFontColor("#FFFFFF")
+                .setFontWeight("bold")
+                .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    let mergeRange = sheet.getRange(3, startCol, 2, 2);
     mergeRange.merge();
-    for(j=0; j<course.sessionsPerWeek; j++){
-      sheet.getRange(4, startCol).setValue("Date/Time")
-                                   .setBackground("#8EE4F3")
-                                   .setHorizontalAlignment("center")
-                                   .setFontColor("#4B3A71")
-                                   .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-      sheet.getRange(6, startCol).setValue("Session "+sessionNumber)
-                                   .setBackground("#8EE4F3")
-                                   .setHorizontalAlignment("center")
-                                   .setFontColor("#4B3A71")
-                                   .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-      startCol++;
-      sessionNumber++;
-    }
-    sheet.getRange(4, startCol).setValue("Tutor Notes")
-                               .setBackground("#FFFFFF")
-                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-    sheet.getRange(4, startCol, 3).merge();
-    startCol++;
+    sheet.getRange(5, startCol).setValue("Present")
+                               .setHorizontalAlignment("center")
+                               .setBackground("#8EE4F3");
+    sheet.getRange(5, startCol,2,1).merge();
+    sheet.getRange(5, startCol+1).setValue("Tutor Notes")
+                                 .setHorizontalAlignment("center")
+                                 .setBackground("#8EE4F3");
+    sheet.getRange(5, startCol+1,2,1).merge();
+    startCol+=2
   }
+
   //Add Learner Details
   let studentRow = 7;
-  //copy row of check boxes
-  let checkBoxes = sheet.getRange(studentRow, 4, 1, sheet.getLastColumn()).getValues();
   for(student of course.studentDetails){
     //paste first student row
     let newCheckBoxRange = sheet.getRange(studentRow, 4,1,sheet.getLastColumn());
-    newCheckBoxRange.setValues(checkBoxes);
     let studentRange = sheet.getRange(studentRow, 1).setValue(student.name);
     sheet.getRange(studentRow, 2).setValue(student.email);
     Logger.log("Adding "+student.name+" To "+studentRange.getA1Notation());
     sheet.getRange(studentRow, 3).insertCheckboxes();
     for(i=4; i<sheet.getLastColumn(); i++){
-      let test = sheet.getRange(6, i).getValues();
-      if(test[0][0].toString().includes("Session")){
+      let test = sheet.getRange(5, i).getValues();
+      if(test[0][0].toString().includes("Present")){
         sheet.getRange(studentRow, i).insertCheckboxes();
       }
     }
     studentRow++
   }
   //course footer
+  sheet.getRange(studentRow,1).setBackground("#4B3A71");
   sheet.getRange(studentRow,2).setValue("Additional Tutor or Sales Team Comments")
                      .setHorizontalAlignment("center")
                      .setBackground("#4B3A71")
@@ -191,23 +184,39 @@ function extractEmail(input) {
 }
 
 function buildCourse(ssId){
+  const dataSs = SpreadsheetApp.openById("1oC8wzfx9ORiB-VEqrylhX6fOZIbL6g6fTqfmp2wd2kA");
+  const dataSheet = dataSs.getSheetByName("data");
+  const courseData = dataSheet.getDataRange().getValues();
   class CourseDetails {
-  constructor(moduleName, duration, deliveryMode, sessionsPerWeek, tutorName, studentDetails) {
+  constructor(moduleName, deliveryMode, tutorName, studentDetails,  courseData) {
       this.moduleName = moduleName;
-      this.duration = duration;
-      this.sessionsPerWeek = sessionsPerWeek;
       this.tutorName = tutorName;
       this.studentDetails = studentDetails;
       this.deliveryMode = deliveryMode
+      this.courseData = courseData
     }
-    totalSessions(){
-      total = this.sessionsPerWeek*this.duration;
-      return total;
+    courseId(){
+      //get headders
+      let courseId = "NA";
+      for(i in this.courseData){
+        if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
+          courseId = this.courseData[i][2];
+        }
+      }
+      return courseId;
+    }
+    sessions(){
+      let sessions = 4;
+      for(i in this.courseData){
+        if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
+          sessions = this.courseData[i][1];
+        }
+      }
+      return sessions;
     }
   }
   const ss = SpreadsheetApp.openById(ssId);
   const sheet = ss.getSheetByName("Main");
-  Logger.log(sheet)
   const data = sheet.getDataRange().getValues();
   //missing variables
   const duration = 4;
@@ -234,27 +243,29 @@ function buildCourse(ssId){
         name: row[firstNameIndex]+" "+row[lastNameIndex],
         email: row[emailIndex]
       };
+      Logger.log("Adding "+student.name+" to "+row[courseIndex]);
       courseNames.push(row[courseIndex]);
       let course = new CourseDetails(
         row[courseIndex],
-        4,
         row[locationIndex],
-        2,
         row[tutorIndex],
-        [student]
+        [student],
+        courseData
       );
+      Logger.log("Course ID: "+course.courseId());
+      Logger.log("Number of Sessions: "+course.sessions())
       courses.push(course);
     }
     else{
       let course;
       for(line of courses){
-        Logger.log("Checking "+line.moduleName);
         if(line.moduleName == row[courseIndex]){
           course = line;
           student = {
             name: row[firstNameIndex]+" "+row[lastNameIndex],
             email: row[emailIndex]
           };
+          Logger.log("Adding "+student.name+" to "+line.moduleName)
           course.studentDetails.push(student);
         }
       }
@@ -297,7 +308,6 @@ function processUpload(e){
 
 function emailAttendanceSheets(email, opSheets){
   Logger.log("Emailing Results to "+ email);
-  Logger.log(opSheets);
   let template = HtmlService.createTemplateFromFile("emailBody");
   const urls = [];
   const locations = [];
@@ -316,7 +326,6 @@ function emailAttendanceSheets(email, opSheets){
     tutor: tutor,
     courseName: courseName
   }
-  Logger.log(messageContent)
   template.messageContent = messageContent;
   const message = template.evaluate().getContent();
   const mail = {
@@ -357,14 +366,14 @@ function createChainOfCustody(ss, course){
   cocSheet.getRange(startRow,2,1,3).merge();
   cocSheet.getRange(startRow,6).setValue("QQI Code: ");
   //TODO: Implement QQI code in course creation
-  cocSheet.getRange(startRow,7).setValue("{{Implement QQI Code}}");
+  cocSheet.getRange(startRow,7).setValue(course.courseId());
   cocSheet.getRange(startRow,7,1,3).merge();
 
   startRow++;
   //Start date and tutor name & signature
   cocSheet.getRange(startRow,1).setValue("Start Date:");
   //TODO: Implement Start date in Course Creation
-  cocSheet.getRange(startRow,2).setValue("{{Start Date}}");
+  cocSheet.getRange(startRow,2).setValue("START DATE");
   cocSheet.getRange(startRow,2,1,3).merge();
   cocSheet.getRange(startRow,6).setValue("Tutor Signature:")
   cocSheet.getRange(startRow,7).setValue("___________________");
