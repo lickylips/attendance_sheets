@@ -8,7 +8,7 @@ function testCreation(){
 function buildAttendanceSheet(course) {
   const date = new Date();
   //const course = mockClass();
-  const ss = SpreadsheetApp.create(course.moduleName);
+  const ss = SpreadsheetApp.create(course.moduleName+" - "+course.startDate);
   const sheet = ss.insertSheet("CourseTitle");
 
   //Course Header
@@ -111,6 +111,7 @@ function buildAttendanceSheet(course) {
         sheet.getRange(studentRow, i).insertCheckboxes();
       }
     }
+    sheet.getRange(studentRow, sheet.getLastColumn()).inser
     studentRow++
   }
   //course footer
@@ -132,13 +133,38 @@ function buildAttendanceSheet(course) {
   sheet.setFrozenColumns(1);
   //Clean Up
   ss.moveActiveSheet(0);
-  const destinationFolderId = "1fv7VcfjvOrfw7EmXPowwsH5XGFPJTIs_";
+  const destinationFolderId = findDestinationFolder(course);
   const destinationFolder = DriveApp.getFolderById(destinationFolderId);
   const opSheet = DriveApp.getFileById(ss.getId());
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(destinationFolder);
   createChainOfCustody(SpreadsheetApp.openById(opSheet.getId()), course);
   return opSheetUrl;
+}
+
+function findDestinationFolder(course) {
+  const rootFolderId = "1S4OWYJNRCEev0e9IxLuQO1v6DcvQsu2i";
+  const rootFolder = DriveApp.getFolderById(rootFolderId);
+  const subFolders = rootFolder.getFolders();
+  Logger.log("Subfolders: "+subFolders);
+  let destinationFolderId;
+
+  if (subFolders !== undefined && subFolders !== null) {
+    while (subFolders.hasNext()) {
+      let subFolder = subFolders.next();
+      if (subFolder.getName() === course.moduleName) {
+        destinationFolderId = subFolder.getId();
+        break;
+      }
+    }
+  }
+
+  if (destinationFolderId === undefined) {
+    let newFolder = rootFolder.createFolder(course.moduleName);
+    destinationFolderId = newFolder.getId();
+  }
+
+  return destinationFolderId;
 }
 
 function extractName(input) {
@@ -188,12 +214,13 @@ function buildCourse(ssId){
   const dataSheet = dataSs.getSheetByName("data");
   const courseData = dataSheet.getDataRange().getValues();
   class CourseDetails {
-  constructor(moduleName, deliveryMode, tutorName, studentDetails,  courseData) {
+  constructor(moduleName, deliveryMode, tutorName, studentDetails,  courseData, startDate) {
       this.moduleName = moduleName;
       this.tutorName = tutorName;
       this.studentDetails = studentDetails;
       this.deliveryMode = deliveryMode
       this.courseData = courseData
+      this.startDate = startDate
     }
     courseId(){
       //get headders
@@ -222,7 +249,7 @@ function buildCourse(ssId){
   const duration = 4;
   const sessionsPerWeek = 2;
   //find indexes for required fields
-  let courseIndex, participantIndex, locationIndex, tutorIndex, firstNameIndex;
+  let courseIndex, participantIndex, locationIndex, tutorIndex, firstNameIndex, startDateIndex;
   for(i in data[0]){
     if(data[0][i].includes("Course")){courseIndex = Number(i)}
     if(data[0][i].includes("Participants (details)")){participantIndex = Number(i)}
@@ -231,6 +258,7 @@ function buildCourse(ssId){
     if(data[0][i].includes("First name (participant)")){firstNameIndex = Number(i)}
     if(data[0][i].includes("Last name (participant)")){lastNameIndex = Number(i)}
     if(data[0][i].includes("Email address (participant)")){emailIndex = Number(i)}
+    if(data[0][i].includes("Start")){startDateIndex = Number(i);}
   }
   data.shift(); //drop header row
   //find all courses on this date
@@ -250,7 +278,8 @@ function buildCourse(ssId){
         row[locationIndex],
         row[tutorIndex],
         [student],
-        courseData
+        courseData,
+        row[startDateIndex]
       );
       Logger.log("Course ID: "+course.courseId());
       Logger.log("Number of Sessions: "+course.sessions())
@@ -277,7 +306,7 @@ function buildCourse(ssId){
 function convertExcelToGoogleSheets(xlsId) {
   let file = DriveApp.getFileById(xlsId);
   let blob = file.getBlob();
-  let folder = "16L0EUJ4KPhnu9TfTqMURR4AuKLfDiUeW";
+  let folder = "18nt7cn0m-NZW24DERYbF46bcWu7gRZ7a";
   let config = {
     title: "[Google Sheets] " + file.getName(),
     parents: [{id: folder}],
