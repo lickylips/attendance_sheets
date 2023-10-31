@@ -9,7 +9,7 @@ function buildAttendanceSheet(course) {
   const date = new Date();
   //const course = mockClass();
   const ss = SpreadsheetApp.create(course.moduleName+" - "+course.startDate);
-  const sheet = ss.insertSheet("CourseTitle");
+  const sheet = ss.insertSheet(course.moduleName);
 
   //Course Header
   sheet.getRange(1,1).setBackground("#4B3A71");
@@ -139,14 +139,14 @@ function buildAttendanceSheet(course) {
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(destinationFolder);
   createChainOfCustody(SpreadsheetApp.openById(opSheet.getId()), course);
+  createSignInSheet(SpreadsheetApp.openById(opSheet.getId()), course)
   return opSheetUrl;
 }
 
 function findDestinationFolder(course) {
   const rootFolderId = "1S4OWYJNRCEev0e9IxLuQO1v6DcvQsu2i";
   const rootFolder = DriveApp.getFolderById(rootFolderId);
-  const subFolders = rootFolder.getFolders();
-  Logger.log("Subfolders: "+subFolders);
+  const subFolders = rootFolder.getFolders()
   let destinationFolderId;
 
   if (subFolders !== undefined && subFolders !== null) {
@@ -394,15 +394,18 @@ function createChainOfCustody(ss, course){
   cocSheet.getRange(startRow,2).setValue(course.moduleName);
   cocSheet.getRange(startRow,2,1,3).merge();
   cocSheet.getRange(startRow,6).setValue("QQI Code: ");
-  //TODO: Implement QQI code in course creation
   cocSheet.getRange(startRow,7).setValue(course.courseId());
   cocSheet.getRange(startRow,7,1,3).merge();
 
   startRow++;
   //Start date and tutor name & signature
   cocSheet.getRange(startRow,1).setValue("Start Date:");
-  //TODO: Implement Start date in Course Creation
-  cocSheet.getRange(startRow,2).setValue("START DATE");
+  Logger.log("formatting course date "+course.startDate);
+  let startDate = new Date(course.startDate);
+  Logger.log(startDate);
+  let formattedDate = Utilities.formatDate(startDate, "GMT", "dd/MM/yyyy");
+  cocSheet.getRange(startRow,2).setValue(formattedDate)
+          .setHorizontalAlignment("left");
   cocSheet.getRange(startRow,2,1,3).merge();
   cocSheet.getRange(startRow,6).setValue("Tutor Signature:")
   cocSheet.getRange(startRow,7).setValue("___________________");
@@ -515,4 +518,109 @@ function mockClass() {
   const deliveryMode = "On Site in Glin Centre"
   const course = new CourseDetails(moduleName, duration, deliveryMode, sessionCount, tutorName, studentDetails)
   return course;
+}
+
+function createSignInSheet(ss, course){
+  Logger.log("Building Printable Sign In Sheet");
+  const siSheet = ss.insertSheet("Printable Sign In Sheet");
+  //Add Document Header
+  
+  let startRow = 2;
+  //First Row / Title
+  siSheet.getRange(startRow,1).setValue("Sign In Sheet")
+                        .setFontSize(20)
+                        .setHorizontalAlignment("center");
+  siSheet.getRange(startRow,1,1,10).merge();
+  startRow++;
+
+  //Logo
+  const logoUrl = "https://lickylip.net/wp-content/uploads/2023/09/21-small.png";
+  const image = SpreadsheetApp.newCellImage()
+                              .setSourceUrl(logoUrl)
+                              .build();
+  siSheet.getRange(startRow,1).setValue(image)
+                               .setHorizontalAlignment("center");
+  siSheet.setRowHeight(startRow, 100);
+  siSheet.getRange(startRow,1, 1, 10).merge();
+  startRow++
+
+  //Title, Date, QQI Code
+  siSheet.getRange(startRow,1).setValue("Course Title: ");
+  siSheet.getRange(startRow,2).setValue(course.moduleName);
+  siSheet.getRange(startRow,2,1,3).merge();
+  siSheet.getRange(startRow,6).setValue("QQI Code: ");
+  siSheet.getRange(startRow,7).setValue(course.courseId());
+  siSheet.getRange(startRow,7,1,3).merge();
+
+  startRow++;
+  //Start date and tutor name & signature
+  siSheet.getRange(startRow,1).setValue("Start Date:");
+  let startDate = new Date(course.startDate);
+  let formattedDate = Utilities.formatDate(startDate, "GMT", "dd/MM/yyyy");
+  siSheet.getRange(startRow,2).setValue(formattedDate)
+         .setHorizontalAlignment("left");
+  siSheet.getRange(startRow,2,1,3).merge();
+  siSheet.getRange(startRow,6).setValue("Tutor Signature:")
+  siSheet.getRange(startRow,7).setValue("___________________");
+  siSheet.getRange(startRow,7,1,3).merge();
+  startRow++;
+  
+  siSheet.getRange(startRow,7).setValue(course.moduleName);
+  siSheet.getRange(startRow,7,1,3).merge();
+  startRow++;
+
+  //Instruction on block caps
+  siSheet.getRange(startRow,1).setValue("PLEASE WRITE FULL NAME IN BLOCK CAPITALS")
+          .setHorizontalAlignment("center");
+  siSheet.getRange(startRow,1,1,10).merge();
+  startRow++;
+
+  //Clear boarders first
+  siSheet.getRange(1,1,siSheet.getLastRow(),siSheet.getLastColumn())
+          .setBorder(false, false, false, false, false, false);
+
+  //Column Headers
+  const borderStyle = SpreadsheetApp.BorderStyle.SOLID;
+  const borderColor = "#4B3A71";
+  const borderWidth = 1;
+  siSheet.getRange(startRow,1).setValue("Number")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  siSheet.getRange(startRow,2).setValue("Student")
+                               .setHorizontalAlignment("center")
+                               .setWrap(true)
+                               .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  Logger.log("Adding headders for "+course.sessions()+" sessions");
+  let sessionNo = 1;
+  let col = 3;
+  for (let i=0; i<Number(course.sessions()); i++){
+    Logger.log("adding session "+sessionNo);
+    siSheet.getRange(startRow, col).setValue("Session "+sessionNo)
+                                  .setHorizontalAlignment("center")
+                                  .setWrap(true)
+                                  .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    col+=1
+    siSheet.getRange(startRow, col).setValue("Notes")
+                                  .setHorizontalAlignment("center")
+                                  .setWrap(true)
+                                  .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    col+=1;
+    sessionNo+=1
+  }
+
+  startRow++;
+  //Student rows
+  for(let i=0; i<course.studentDetails.length; i++){
+    siSheet.getRange(startRow, 1).setValue(i+1)
+                                  .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    siSheet.getRange(startRow, 2).setValue(course.studentDetails[i].name)
+                                  .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+    siSheet.getRange(startRow,3,1,course.sessions()*2).setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID)
+    startRow++;
+  }
+  siSheet.autoResizeColumn(2);
+  siSheet.getRange(1,1,siSheet.getLastRow(),siSheet.getLastColumn())
+          .setFontColor("#4B3A71");
+  siSheet.setHiddenGridlines(true);
 }
