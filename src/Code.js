@@ -13,7 +13,7 @@ function buildAttendanceSheet(course) {
 
   //Course Header
   sheet.getRange(1,1).setBackground("#4B3A71");
-  sheet.getRange(1,3).setValue("Live Leaner Register "+date.getFullYear())
+  sheet.getRange(1,3).setValue("Live Leaner Register for "+course.moduleName+" on "+course.startDate)
                      .setHorizontalAlignment("center")
                      .setBackground("#4B3A71")
                      .setFontSize(18)
