@@ -404,7 +404,7 @@ function createChainOfCustody(docId, course){
     cocSheet.getRange(startRow,3,1,8).setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID)
     startRow++;
   }
-  cocSheet.autoResizeColumn(1);
+  cocSheet.autoResizeColumn(2);
   cocSheet.getRange(1,1,cocSheet.getLastRow(),cocSheet.getLastColumn())
           .setFontColor("#3B3A71");
   cocSheet.setHiddenGridlines(true);
