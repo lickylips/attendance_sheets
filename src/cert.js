@@ -72,7 +72,7 @@ function readSheet(docId){
 
 function buildStudentObject(studentArray, settings){
   class Student{
-    constructor(name, email, date, paid, coursePassed, sent, letter, cert){
+    constructor(name, email, date, paid, coursePassed, sent, letter, cert, tutor){
       this.name = name;
       this.email = email;
       this.date = date;
@@ -82,6 +82,7 @@ function buildStudentObject(studentArray, settings){
       this.sponsor = "";
       this.letter = letter;
       this.cert = cert;
+      this.tutor = tutor;
     }
     issuedOn(){
       let issuedOnDate = new Date(this.date);
@@ -106,6 +107,7 @@ function buildStudentObject(studentArray, settings){
     if(headers[i].includes("Sponsor Contact")){sponsorCol = Number(i);}
     if(headers[i].includes("Letter")){letterCol = Number(i);}
     if(headers[i].includes("Cert")){certCol = Number(i);}
+    if(headers[i].includes("Tutor")){tutorCol = Number(i);}
   }
   const students = [];
   for(i in studentArray){
@@ -117,7 +119,8 @@ function buildStudentObject(studentArray, settings){
     let sent = studentArray[i][sentCol]
     let letter = studentArray[i][letterCol];
     let cert = studentArray[i][certCol];
-    let student = new Student(name, email, date, paid, coursePassed, sent, letter, cert);
+    let tutor = studentArray[i][tutorCol];
+    let student = new Student(name, email, date, paid, coursePassed, sent, letter, cert, tutor);
     if(studentArray[i][sponsorCol] != null){student.sponsor = studentArray[i][sponsorCol];}
     students.push(student)
   }

@@ -2,7 +2,7 @@ function buildCompletionLetter(content, settings){
     Logger.log("generating letter");
     //Make New Letter File
     const outputFolder = DriveApp.getFolderById(settings.exportFolder);
-    const letterTemplateId = "1er2HGhQ0_I3QahJIDaRRyvdFoAT8VgbWORG3wLc8ivc"
+    const letterTemplateId = findLetterTemplate(settings.courseName);
     const letterTemplate = DriveApp.getFileById(letterTemplateId);
     let newLetter = letterTemplate.makeCopy();
     newLetter.setName("Course Completion Letter "+content.name);
@@ -17,6 +17,7 @@ function buildCompletionLetter(content, settings){
     body.replaceText("{{COURSE NAME}}", settings.courseName);
     body.replaceText("{{DATE}}", dateFormatted);
     body.replaceText("{{COURSE DETAILS}}", settings.courseDetails);
+    body.replaceText("{{TUTOR NAME}}", content.tutor);
     const url = newLetter.getUrl();
     return url;
   }
@@ -37,4 +38,15 @@ function buildCompletionLetter(content, settings){
         linkCell.setFormula("=HYPERLINK(\""+url+"\", \"Letter\")");
       }
     }
+  }
+
+  function findLetterTemplate(courseName){
+    let templateId;
+    if(courseName.includes("Safe Pass") || courseName.includes("safepass")){
+        templateId = "19LyYJ8XPlVp6FZTQcsFOBXSbYwU964rAbeTE8CuUbcY"
+    }
+    else {
+        templateId = "1er2HGhQ0_I3QahJIDaRRyvdFoAT8VgbWORG3wLc8ivc"
+    }
+    return templateId
   }
