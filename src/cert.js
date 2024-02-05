@@ -72,7 +72,7 @@ function readSheet(docId){
 
 function buildStudentObject(studentArray, settings){
   class Student{
-    constructor(name, email, date, paid, coursePassed, sent){
+    constructor(name, email, date, paid, coursePassed, sent, letter, cert){
       this.name = name;
       this.email = email;
       this.date = date;
@@ -80,6 +80,8 @@ function buildStudentObject(studentArray, settings){
       this.coursePassed = coursePassed;
       this.sent = sent;
       this.sponsor = "";
+      this.letter = letter;
+      this.cert = cert;
     }
     issuedOn(){
       let issuedOnDate = new Date(this.date);
@@ -93,7 +95,7 @@ function buildStudentObject(studentArray, settings){
   }
   //get headding cols
   let headers = studentArray.shift()
-  let nameCol, emailCol, dateCol, paidCol, coursePassedCol, sentCol, sponsorCol;
+  let nameCol, emailCol, dateCol, paidCol, coursePassedCol, sentCol, sponsorCol , letterCol, certCol;
   for(i in headers){
     if(headers[i].includes("Name")){ nameCol = Number(i);}
     if(headers[i].includes("Email")){ emailCol = Number(i);}
@@ -102,6 +104,8 @@ function buildStudentObject(studentArray, settings){
     if(headers[i].includes("Course Passed")){ coursePassedCol = Number(i);}
     if(headers[i].includes("Sent")){ sentCol = Number(i);}
     if(headers[i].includes("Sponsor Contact")){sponsorCol = Number(i);}
+    if(headers[i].includes("Letter")){letterCol = Number(i);}
+    if(headers[i].includes("Cert")){certCol = Number(i);}
   }
   const students = [];
   for(i in studentArray){
@@ -111,7 +115,9 @@ function buildStudentObject(studentArray, settings){
     let paid = studentArray[i][paidCol];
     let coursePassed = studentArray[i][coursePassedCol];
     let sent = studentArray[i][sentCol]
-    let student = new Student(name, email, date, paid, coursePassed, sent);
+    let letter = studentArray[i][letterCol];
+    let cert = studentArray[i][certCol];
+    let student = new Student(name, email, date, paid, coursePassed, sent, letter, cert);
     if(studentArray[i][sponsorCol] != null){student.sponsor = studentArray[i][sponsorCol];}
     students.push(student)
   }
@@ -178,23 +184,21 @@ function emailNewCert(pdf, student, settings){
   MailApp.sendEmail(email);
 }
 
-function buildCompletionLetter(content, settings){
-  Logger.log("generating letter");
-  //Make New Letter File
-  const outputFolder = DriveApp.getFolderById(settings.exportFolder);
-  const letterTemplateId = "0er2HGhQ0_I3QahJIDaRRyvdFoAT8VgbWORG3wLc8ivc"
-  const letterTemplate = DriveApp.getFileById(letterTemplateId);
-  let newLetter = letterTemplate.makeCopy();
-  newLetter.setName("Course Completion Letter "+content.name);
-  newLetter.moveTo(outputFolder);
-  const newLetterId = newLetter.getId();
-  //Open new Letter file as document
-
-  newLetter = DocumentApp.openById(newLetterId);
-  const body = newLetter.getBody();
-  const dateFormatted = Utilities.formatDate(content.date, "GMT", "EEE MMM dd yyyy");
-  body.replaceText("{{STUDENT NAME}}", content.name);
-  body.replaceText("{{COURSE NAME}}", settings.courseName);
-  body.replaceText("{{DATE}}", dateFormatted);
-  body.replaceText("{{COURSE DETAILS}}", settings.courseDetails);
+function linkPdf(student, pdf){
+  const url = pdf.getUrl();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const studentSheet = ss.getSheetByName("Cert Generator");
+  const studentArray = studentSheet.getDataRange().getValues();
+  let nameCol, emailCol, certCol;
+  for(i in studentArray[0]){
+    if (studentArray[0][i].includes("Name")){nameCol = Number(i);}
+    if (studentArray[0][i].includes("Email")){emailCol = Number(i);}
+    if (studentArray[0][i].includes("Cert")){certCol = Number(i);}
+  }
+  for(i in studentArray){
+    if(studentArray[i][nameCol]== student.name && studentArray[i][emailCol]==student.email){
+      let linkCell = studentSheet.getRange(Number(i)+1, certCol+1);
+      linkCell.setFormula("=HYPERLINK(\""+url+"\", \"Cert\")");
+    }
+  }
 }
