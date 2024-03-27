@@ -17,11 +17,13 @@ function buildAttendanceSheet(course) {
   ss.deleteSheet(oldSheet);
   const destinationFolderId = findDestinationFolder(course);
   const destinationFolder = DriveApp.getFolderById(destinationFolderId);
-  const certFolderId = getOrCreateCertsFolder(destinationFolderId);
+  const datedFolder = getOrCreateDatedFolder(destinationFolder, course.startDate);
+  const datedFolderId = datedFolder.getId();
+  const certFolderId = getOrCreateCertsFolder(datedFolderId);
   createSettingsSheet(docId, course, certFolderId);
   const opSheet = DriveApp.getFileById(ss.getId());
   const opSheetUrl = opSheet.getUrl();
-  opSheet.moveTo(destinationFolder);
+  opSheet.moveTo(datedFolder);
   return opSheetUrl;
 }
 
@@ -132,7 +134,11 @@ function buildCourse(ssId){
   const sheet = ss.getSheetByName("Main");
   const data = sheet.getDataRange().getValues();
   //find indexes for required fields
-  let courseIndex, participantIndex, locationIndex, tutorIndex, firstNameIndex, startDateIndex, sponsorIndex, endIndex;
+  let courseIndex, participantIndex, locationIndex, 
+    tutorIndex, firstNameIndex, startDateIndex, 
+    sponsorIndex, endIndex, address1Index, 
+    address2Index, cityIndex, homePhoneIndexIndex,
+    mobilePhoneIndexIndex;
   for(i in data[0]){
     if(data[0][i].includes("Course")){courseIndex = Number(i);}
     if(data[0][i].includes("Participants (details)")){participantIndex = Number(i);}
@@ -144,6 +150,11 @@ function buildCourse(ssId){
     if(data[0][i].includes("Start")){startDateIndex = Number(i);}
     if(data[0][i].includes("Email address (customer)")){sponsorIndex = Number(i);}
     if(data[0][i].includes("End")){endIndex = Number(i);}
+    if(data[0][i].includes("Participant - Address 1")){address1Index = Number(i);}
+    if(data[0][i].includes("Participant - Address 2")){address2Index = Number(i);}
+    if(data[0][i].includes("Participant - City")){cityIndex = Number(i);}
+    if(data[0][i].includes("Participant - Telephone (home)")){homePhoneIndexIndex = Number(i);}
+    if(data[0][i].includes("Participant - Telephone (mobile)")){mobilePhoneIndexIndex = Number(i);}
   }
   data.shift(); //drop header row
   //find all courses on this date
@@ -155,7 +166,9 @@ function buildCourse(ssId){
       let student = {
         name: row[firstNameIndex]+" "+row[lastNameIndex],
         email: row[emailIndex],
-        sponsor: row[sponsorIndex]
+        sponsor: row[sponsorIndex],
+        address: row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
+        phone: "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
       };
       Logger.log("Adding "+student.name+" to "+row[courseIndex]);
       courseNames.push(row[courseIndex]);
@@ -181,7 +194,9 @@ function buildCourse(ssId){
           student = {
             name: row[firstNameIndex]+" "+row[lastNameIndex],
             email: row[emailIndex],
-            sponsor: row[sponsorIndex]
+            sponsor: row[sponsorIndex],
+            address: row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
+            phone: "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
           };
           Logger.log("Adding "+student.name+" to "+line.moduleName)
           course.studentDetails.push(student);

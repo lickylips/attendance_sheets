@@ -9,7 +9,10 @@ function createCertGenerator(docId, course){
     const certSheet = ss.insertSheet("Cert Generator");
     Logger.log(course.end);
     //Header row
-    let headers = ["Name", "Email", "Sponsor Contact", "Tutor", "Date", "Paid", "Course Passed", "Sent", "Cert", "Letter"];
+    let headers = ["Name", "Email", "Sponsor Contact", 
+                   "Tutor", "Date", "Paid", "Course Passed", 
+                   "Sent", "Cert", "Letter",
+                   "Address", "Phone"];
     certSheet.appendRow(headers);
     //Student Rows
     let rowNumber = 2
@@ -24,7 +27,9 @@ function createCertGenerator(docId, course){
         false,
         false,
         "",
-        ""
+        "",
+        student.address,
+        student.phone
       ];
       newRow = certSheet.appendRow(studentRow);
       range = certSheet.getRange(rowNumber, 6, 1, 3);
@@ -32,6 +37,7 @@ function createCertGenerator(docId, course){
       rowNumber++;
     }
     ss.setFrozenRows(1);
+    certSheet.getDataRange().setVerticalAlignment("TOP");
   }
 
   /**

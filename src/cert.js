@@ -168,6 +168,30 @@ function getOrCreateCertsFolder(parentFolderId) {
   }
 }
 
+/**
+ * getOrCreateDatedFolder
+ * Funcrtion to find if there is a dated folder for the start
+ * date of a given course in the cours named folder
+ * @param {object} parentFolder 
+ * @param {object} folderDate 
+ * @returns {object} folderName
+ */
+function getOrCreateDatedFolder(parentFolder, folderDate) {
+  // Format the date as YYYY-MM-DD
+  const formattedDate = Utilities.formatDate(folderDate, "GMT", "yyyy-MM-dd");
+
+  // Get folders within the parent folder matching the date pattern
+  const folders = parentFolder.getFoldersByName(formattedDate);
+
+  // If a folder already exists, return it
+  if (folders.hasNext()) {
+    return folders.next();
+  } else {
+    // If the folder doesn't exist, create it and return it
+    return parentFolder.createFolder(formattedDate);
+  }
+}
+
 function emailNewCert(pdf, student, settings){
   const attachment = pdf.getBlob();
   let template = HtmlService.createTemplateFromFile("certEmail");

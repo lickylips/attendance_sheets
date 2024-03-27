@@ -4,6 +4,7 @@ function menu() {
   ui.createMenu('Generate Certificate')
       .addItem('Process Certs', 'processContent')
       .addItem("Process Letters", "letters")
+      .addItem("Create Labels", "labels")
       .addToUi();
 }
 
@@ -37,4 +38,8 @@ function processLetters(){
       linkLetter(student, letterUrl);
     }
   }
+}
+
+function processLabels(){
+  generateLabels();
 }
