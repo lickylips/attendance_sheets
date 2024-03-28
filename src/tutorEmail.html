@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+        th {
+            background-color: #4b3a71;
+            color: white;
+        }
+    </style>
+  </head>
+  <body>
+    <p>Dear <?= messageContent.name ?>,</p>
+    <p>
+        The attendance sheet for the upcoming course you are delivering 
+        <?= messageContent.course ?> has been generated and can be found 
+        at the link below:
+    </p>
+    <p>
+        <a href="<?= messageContent.url ?>"><?= messageContent.course?></a>
+    </p>
+    <p>Yours</p>
+    <p>The NCU Team</p>
+  </body>
+</html>

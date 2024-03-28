@@ -216,7 +216,9 @@ function convertExcelToGoogleSheets(xlsId) {
     parents: [{id: folder}],
     mimeType: MimeType.GOOGLE_SHEETS
   };
-  let spreadsheet = Drive.Files.insert(config, blob);
+
+  // Drive API v3 method 
+  let spreadsheet = Drive.Files.create(config, blob, {"convert": true});  
   return spreadsheet.id;
 }
 
@@ -270,4 +272,26 @@ function emailAttendanceSheets(email, opSheets){
   MailApp.sendEmail(mail);
 }
 
+function getTutorEmail(name){
+  // Convert the name to lowercase and remove any spaces or apostrophes
+  const formattedName = name.toLowerCase().replace(/(\s+)|'/g, "");
+  
+  // Assuming email format is firstname.lastname@domain.com
+  const email = formattedName + "@ncutraining.ie";
+  
+  return email;
+}
 
+function emailTutor(course){
+  const email = getTutorEmail(course.tutorName);
+  const template = HtmlService.createTemplateFromFile("tutorEmail");
+  template.course = course;
+  const message = template.evaluate().getContent();
+  const mail = {
+    to: email,
+    replyTo: "info@ncultd.ie",
+    subject: "Upcoming Course Attendance Sheets",
+    htmlBody: message
+  }
+  MailApp.sendEmail(mail);
+}
