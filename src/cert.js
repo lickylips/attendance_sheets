@@ -65,7 +65,7 @@ function getSettings(docId){
 
 function readSheet(docId){
   const ss = SpreadsheetApp.openById(docId);
-  const studentsSheet = ss.getSheetByName("Cert Generator");
+  const studentsSheet = ss.getSheetByName("Document Generator");
   const studentsArray = studentsSheet.getDataRange().getValues();
   return studentsArray;
 }
@@ -138,7 +138,7 @@ function createContent(){
 
 function markSent(student){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const studentSheet = ss.getSheetByName("Cert Generator");
+  const studentSheet = ss.getSheetByName("Document Generator");
   const studentArray = studentSheet.getDataRange().getValues();
   let nameCol, emailCol, sentCol;
   for(i in studentArray[0]){
@@ -195,7 +195,6 @@ function getOrCreateDatedFolder(parentFolder, folderDate) {
 function emailNewCert(pdf, student, settings){
   const attachment = pdf.getBlob();
   let template = HtmlService.createTemplateFromFile("certEmail");
-  Logger.log(student);
   template.student = student;
   template.settings = settings;
   const message = template.evaluate().getContent();
@@ -214,7 +213,7 @@ function emailNewCert(pdf, student, settings){
 function linkPdf(student, pdf){
   const url = pdf.getUrl();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const studentSheet = ss.getSheetByName("Cert Generator");
+  const studentSheet = ss.getSheetByName("Document Generator");
   const studentArray = studentSheet.getDataRange().getValues();
   let nameCol, emailCol, certCol;
   for(i in studentArray[0]){

@@ -1,7 +1,7 @@
 function generateLabels(){
     const lableTemplateId = "1KNplm1GPPowrGvEvASLC7os_fBT8rQjrvLF-ORsP-LM";
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const studentSheet = ss.getSheetByName("Cert Generator");
+    const studentSheet = ss.getSheetByName("Document Generator");
     const studentData = studentSheet.getDataRange().getValues();
     const students = getStudentObjects(studentData);
     const studentNumbers = students.length;

@@ -13,6 +13,7 @@ function buildAttendanceSheet(course) {
   createChainOfCustody(docId, course);
   createSignInSheet(docId, course);
   createCertGenerator(docId, course);
+  createSummarySheet(docId, course);
   const oldSheet = ss.getSheetByName("Sheet1");
   ss.deleteSheet(oldSheet);
   const destinationFolderId = findDestinationFolder(course);
@@ -73,6 +74,7 @@ function extractName(input) {
 }
 
 function extractEmail(input) {
+  Logger.log("Extracting tutor email from "+input);
   // Split the input into lines
   var lines = input.split('\n');
 
@@ -93,46 +95,31 @@ function extractEmail(input) {
   return email;
 }
 
-function buildCourse(ssId){
-  //get sheet with course lengths and codes
+function getCourseData() {
+  Logger.log("Getting course data from spreadsheet/salesforce");
   const dataSs = SpreadsheetApp.openById("1oC8wzfx9ORiB-VEqrylhX6fOZIbL6g6fTqfmp2wd2kA");
   const dataSheet = dataSs.getSheetByName("data");
-  const courseData = dataSheet.getDataRange().getValues();
+  return dataSheet.getDataRange().getValues();
+}
+
+function testGetCourseData(){
+  const courseData = getCourseData();
+  Logger.log(courseData[0])
+  Logger.log(typeof courseData[0][0])
+
+}
+
+function buildCourse(ssId){
+  Logger.log("Building courses");
+  //get sheet with course lengths and codes
+  const courseData = getCourseData();
   // create the course details class
-  class CourseDetails {
-  constructor(moduleName, deliveryMode, tutorName, studentDetails,  courseData, startDate, end) {
-      this.moduleName = moduleName;
-      this.tutorName = tutorName;
-      this.studentDetails = studentDetails;
-      this.deliveryMode = deliveryMode;
-      this.courseData = courseData;
-      this.startDate = startDate;
-      this.end = end;
-    }
-    courseId(){
-      //get headders
-      let courseId = "NA";
-      for(i in this.courseData){
-        if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
-          courseId = this.courseData[i][2];
-        }
-      }
-      return courseId;
-    }
-    sessions(){
-      let sessions = 4;
-      for(i in this.courseData){
-        if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
-          sessions = this.courseData[i][1];
-        }
-      }
-      return sessions;
-    }
-  }
+  
   //Open the uploaded file to read the upcoming course info
   const ss = SpreadsheetApp.openById(ssId);
   const sheet = ss.getSheetByName("Main");
   const data = sheet.getDataRange().getValues();
+
   //find indexes for required fields
   let courseIndex, participantIndex, locationIndex, 
     tutorIndex, firstNameIndex, startDateIndex, 
@@ -161,16 +148,16 @@ function buildCourse(ssId){
   const courseNames = [];
   const courses = [];
   for(row of data){
-    if(courseNames.indexOf(row[courseIndex]) == -1){
+    if(courseNames.indexOf(row[courseIndex]) == -1){ //if course not already added
       Logger.log("New course "+row[courseIndex]+" Being Created")
-      let student = {
-        name: row[firstNameIndex]+" "+row[lastNameIndex],
-        email: row[emailIndex],
-        sponsor: row[sponsorIndex],
-        address: row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
-        phone: "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
-      };
-      Logger.log("Adding "+student.name+" to "+row[courseIndex]);
+      student = new StudentDetails (
+        row[firstNameIndex],
+        row[lastNameIndex],
+        row[emailIndex],
+        row[sponsorIndex],
+        row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
+        "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
+      );
       courseNames.push(row[courseIndex]);
       let course = new CourseDetails(
         row[courseIndex],
@@ -181,24 +168,21 @@ function buildCourse(ssId){
         row[startDateIndex],
         row[endIndex],
       );
-      Logger.log("Course ID: "+course.courseId());
-      Logger.log("Number of Sessions: "+course.sessions())
-      Logger.log("end date: "+course.end);
       courses.push(course);
     }
-    else{
+    else{//if course already added
       let course;
       for(line of courses){
         if(line.moduleName == row[courseIndex]){
           course = line;
-          student = {
-            name: row[firstNameIndex]+" "+row[lastNameIndex],
-            email: row[emailIndex],
-            sponsor: row[sponsorIndex],
-            address: row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
-            phone: "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
-          };
-          Logger.log("Adding "+student.name+" to "+line.moduleName)
+          student = new StudentDetails (
+            row[firstNameIndex],
+            row[lastNameIndex],
+            row[emailIndex],
+            row[sponsorIndex],
+            row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
+            "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
+          );
           course.studentDetails.push(student);
         }
       }
@@ -208,6 +192,7 @@ function buildCourse(ssId){
 }
 
 function convertExcelToGoogleSheets(xlsId) {
+  Logger.log("Converting Excel to Google Sheets");
   let file = DriveApp.getFileById(xlsId);
   let blob = file.getBlob();
   let folder = "18nt7cn0m-NZW24DERYbF46bcWu7gRZ7a";
@@ -223,7 +208,7 @@ function convertExcelToGoogleSheets(xlsId) {
 }
 
 function processUpload(e){
-  Logger.log(e.values);
+  Logger.log("Processing Upload");
   const xlsUrl = e.values[2];
   const email = e.values[1];
   const xlsId = xlsUrl.substring(33, xlsUrl.length);
@@ -239,6 +224,24 @@ function processUpload(e){
     opSheets.push(opCourse);
   }
   emailAttendanceSheets(email, opSheets);
+  publishAttendanceSheets(opSheets);
+}
+
+function triggerBuild(){
+  const date = new Date();
+  let courses = buildBookeoCourses(date);
+  let email = "sean.obrien@ncutraining.ie, suzannefoster@ncutraining.ie, louisedunne@ncutraining.ie, jenniferknott@ncutraining.ie";
+  let opSheets = [];
+  for(course of courses){
+    let opSheet = buildAttendanceSheet(course);
+    let opCourse = {
+      course: course,
+      sheet: opSheet
+    };
+    opSheets.push(opCourse);
+  }
+  emailAttendanceSheets(email, opSheets);
+  publishAttendanceSheets(opSheets);
 }
 
 function emailAttendanceSheets(email, opSheets){
@@ -254,7 +257,6 @@ function emailAttendanceSheets(email, opSheets){
     tutor.push(opSheets[i].course.tutorName);
     courseName.push(opSheets[i].course.moduleName);
   }
-  Logger.log(urls);
   const messageContent = {
     urls: urls,
     locations: locations,
@@ -263,35 +265,72 @@ function emailAttendanceSheets(email, opSheets){
   }
   template.messageContent = messageContent;
   const message = template.evaluate().getContent();
+  const today = Utilities.formatDate(new Date(), "GMT", "dd/MM/yyyy");
   const mail = {
     to: email,
     replyTo: "info@ncultd.ie",
-    subject: "Upcoming Course Attendance Sheets",
+    subject: "Upcoming Course Attendance Sheets for "+today,
     htmlBody: message
   }
   MailApp.sendEmail(mail);
 }
 
-function getTutorEmail(name){
-  // Convert the name to lowercase and remove any spaces or apostrophes
-  const formattedName = name.toLowerCase().replace(/(\s+)|'/g, "");
-  
-  // Assuming email format is firstname.lastname@domain.com
-  const email = formattedName + "@ncutraining.ie";
-  
-  return email;
+function publishAttendanceSheets(opSheets){
+  Logger.log("Publishing Attendance Sheets");
+  const docId = "1jIZB4ywPC2CDlgSbWx7Muqbsm27Q9DoVBg4uVEvai_0";
+  const doc = DocumentApp.openById(docId);
+  const body = doc.getBody();
+  const date = new Date(opSheets[0].course.startDate.getTime());
+  const dateParagraphIndex = findOrInsertDate(body, date);
+  for(i in opSheets){
+    sheet = opSheets[i];
+    const courseLine = sheet.course.moduleName + " - " + sheet.course.deliveryMode;
+    const courseParagraph = body.insertParagraph(dateParagraphIndex+1, courseLine);
+    courseParagraph.setLinkUrl(sheet.sheet);
+  }
 }
 
-function emailTutor(course){
-  const email = getTutorEmail(course.tutorName);
-  const template = HtmlService.createTemplateFromFile("tutorEmail");
-  template.course = course;
-  const message = template.evaluate().getContent();
-  const mail = {
-    to: email,
-    replyTo: "info@ncultd.ie",
-    subject: "Upcoming Course Attendance Sheets",
-    htmlBody: message
+function findOrInsertDate(body, targetDate) {
+  const paragraphs = body.getParagraphs();
+  const targetDateObj = new Date(targetDate); // Create a Date object for comparison
+  const targetDateString = Utilities.formatDate(targetDateObj, "GMT", "yyyy-MM-dd");
+
+  // Check for existing paragraphs containing the target date
+  for (let i = 0; i < paragraphs.length; i++) {
+    const paragraphText = paragraphs[i].getText();
+
+    // Validate date format (yyyy-MM-dd)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(paragraphText)) {
+      const paragraphDateObj = new Date(paragraphText);
+
+      // If dates match, return index immediately
+      if (paragraphDateObj.getTime() === targetDateObj.getTime()) {
+        return i; 
+      }
+    } else {
+      // Handle invalid date format
+    }
   }
-  MailApp.sendEmail(mail);
+
+  // If the date was not found, insert a new paragraph in the correct place
+  for (let i = 0; i < paragraphs.length; i++) {
+    const paragraphText = paragraphs[i].getText();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(paragraphText)) {
+      const paragraphDateObj = new Date(paragraphText);
+
+      if (paragraphDateObj < targetDateObj) {
+        // Insert before this paragraph
+        let dateParagraph = body.insertParagraph(i, targetDateString);
+        dateParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+        return i;
+      }
+    }
+  }
+
+  // If no valid date paragraphs were found, or all existing dates are older,
+  // insert at the beginning
+  let dateParagraph = body.insertParagraph(1, targetDateString);
+  dateParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  return 1;
 }
