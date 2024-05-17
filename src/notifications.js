@@ -104,3 +104,14 @@ function extractEmail(input) {
     }
       
   }
+
+function emailErrorLog(error){
+  Logger.log("Sending error log email");
+  const email = "sean.obrien@ncutraining.ie";
+  const mail = {
+    to: email,
+    replyTo: "info@ncultd.ie",
+    subject: "Error Log",
+    body: error
+  };
+}

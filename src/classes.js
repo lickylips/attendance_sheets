@@ -19,7 +19,7 @@ class CourseDetails {
         return courseId;
     }
     sessions(){
-      let courseData = getCourseData();
+      let courseData = this.events;
       let sessions = 4;
       for(i in courseData){
           if(courseData[i][0].trim().includes(this.moduleName.trim())){

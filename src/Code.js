@@ -210,6 +210,7 @@ function convertExcelToGoogleSheets(xlsId) {
 
 function processUpload(e){
   Logger.log("Processing Upload");
+  let errorLog= "Errors: \n";
   const xlsUrl = e.values[2];
   const email = e.values[1];
   const xlsId = xlsUrl.substring(33, xlsUrl.length);
@@ -217,13 +218,19 @@ function processUpload(e){
   let courses = buildCourse(ssId);
   let opSheets = [];
   for(course of courses){
-    let opSheet = buildAttendanceSheet(course);
-    let opCourse = {
-      course: course,
-      sheet: opSheet
-    };
-    opSheets.push(opCourse);
+    try{
+      let opSheet = buildAttendanceSheet(course);
+      let opCourse = {
+        course: course,
+        sheet: opSheet
+      };
+      opSheets.push(opCourse);
+    }
+    catch(err){
+      errorLog += err + "\n";
+    } 
   }
+  emailErrorLog(errorLog);
   emailAttendanceSheets(email, opSheets);
   publishAttendanceSheets(opSheets);
 }
