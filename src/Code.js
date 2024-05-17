@@ -20,6 +20,12 @@ function buildAttendanceSheet(course) {
   const destinationFolderId = findDestinationFolder(course);
   const destinationFolder = DriveApp.getFolderById(destinationFolderId);
   const datedFolder = getOrCreateDatedFolder(destinationFolder, course.startDate);
+  const existingFile = findFileByName(datedFolder, fileTitle);
+  if (existingFile) {
+    // Rename the existing file with "deprecated-Do Not Use" prefix
+    const newFileName = "deprecated-Do Not Use - " + existingFile.getName();
+    existingFile.setName(newFileName);
+  }
   const datedFolderId = datedFolder.getId();
   const certFolderId = getOrCreateCertsFolder(datedFolderId);
   createSettingsSheet(docId, course, certFolderId);
@@ -27,6 +33,17 @@ function buildAttendanceSheet(course) {
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(datedFolder);
   return opSheetUrl;
+}
+
+function findFileByName(folder, name) {
+  const files = folder.getFiles();
+  while (files.hasNext()) {
+    const file = files.next();
+    if (file.getName() === name) {
+      return file;
+    }
+  }
+  return null;
 }
 
 function findDestinationFolder(course) {
@@ -230,9 +247,10 @@ function processUpload(e){
       errorLog += err + "\n";
     } 
   }
-  emailErrorLog(errorLog);
   emailAttendanceSheets(email, opSheets);
   publishAttendanceSheets(opSheets);
+  Logger.log(errorLog);
+  emailErrorLog(errorLog);
 }
 
 function triggerBuild(){

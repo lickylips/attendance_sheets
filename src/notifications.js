@@ -114,4 +114,5 @@ function emailErrorLog(error){
     subject: "Error Log",
     body: error
   };
+  MailApp.sendEmail(mail);
 }
