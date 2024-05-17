@@ -1,7 +1,7 @@
 function getBookeoBookingsForDate(date, productId) {
   if(!date) {
     //date = new Date();
-    date = new Date("2024-04-30"); // For testing purposes
+    date = new Date("2024-05-03"); // For testing purposes
   }
   const apiKey = 'AKEJWP7UJA3XP7XHU6FNE224NR4XX3148FA63EA11';
   const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
@@ -17,7 +17,9 @@ function getBookeoBookingsForDate(date, productId) {
   let url = `${apiUrlBase}bookings?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
   url+= "&expandCustomer=true";
   url+= "&expandParticipants=true";
-  url+= "&productId="+productId;
+  if(productId) {
+    url+= "&productId="+productId;
+  }
   Logger.log(url);
 
   // Fetch data from Bookeo API
@@ -32,7 +34,7 @@ function getBookeoBookingsForDate(date, productId) {
 function getCoursesForDate(date) {
   if(!date) {
     //date = new Date();
-    date = new Date("2024-05-09"); // For testing purposes
+    date = new Date("2024-05-03"); // For testing purposes
   }
   const apiKey = 'AKEJWP7UJA3XP7XHU6FNE224NR4XX3148FA63EA11';
   const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
@@ -58,7 +60,7 @@ function getCoursesForDate(date) {
 function buildBookeoCourses(date){
   if(!date) {
     //date = new Date();
-    date = new Date("2024-04-30"); // For testing purposes
+    date = new Date("2024-05-03"); // For testing purposes
   }
   const courseData = getCoursesForDate(date);
   const courses = courseData.data;
@@ -104,4 +106,25 @@ function buildBookeoCourses(date){
     courseObjects.push(courseObject);
   }
   return courseObjects;
+}
+
+function buildBookeoCourses2(date){
+  if(!date) {
+    //date = new Date();
+    date = new Date("2024-05-03"); // For testing purposes
+  }
+  const bookings = getBookeoBookingsForDate(date);
+  const productNames = [];
+  for(data of bookings.data){
+    if(productNames.includes(data.productName)){
+      continue;
+    } else {
+      productNames.push(data.productName);
+    }
+  }
+  for(let productName of productNames){
+    Logger.log("Creating "+ productName);
+    Logger.log(bookings);
+  }
+  Logger.log(productNames);
 }

@@ -6,7 +6,8 @@ function compileSheet(course){
 
 function buildAttendanceSheet(course) {
   const ssTemplateId = "1cLnKKPwTuMNdA4NnwU0krGjOceXnof6pVeUZo8tS47c";
-  const ssFile = DriveApp.getFileById(ssTemplateId).makeCopy(course.moduleName+" - "+course.startDate)
+  const fileTitle = "["+course.tutorName+"] "+course.moduleName+" - "+course.startDate;
+  const ssFile = DriveApp.getFileById(ssTemplateId).makeCopy(fileTitle);
   const docId = ssFile.getId();
   const ss = SpreadsheetApp.openById(docId);
   createAttendanceSheet(docId, course);
@@ -111,8 +112,6 @@ function testGetCourseData(){
 
 function buildCourse(ssId){
   Logger.log("Building courses");
-  //get sheet with course lengths and codes
-  const courseData = getCourseData();
   // create the course details class
   
   //Open the uploaded file to read the upcoming course info
@@ -145,10 +144,12 @@ function buildCourse(ssId){
   }
   data.shift(); //drop header row
   //find all courses on this date
-  const courseNames = [];
+  let courseData = getCourseData();
+  const courseKeys = [];
   const courses = [];
   for(row of data){
-    if(courseNames.indexOf(row[courseIndex]) == -1){ //if course not already added
+    const courseKey = row[courseIndex] + " - " + row[tutorIndex]; // Composite key
+    if(courseKeys.indexOf(courseKey) == -1){ //if course not already added
       Logger.log("New course "+row[courseIndex]+" Being Created")
       student = new StudentDetails (
         row[firstNameIndex],
@@ -158,7 +159,7 @@ function buildCourse(ssId){
         row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
         "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
       );
-      courseNames.push(row[courseIndex]);
+      courseKeys.push(courseKey);
       let course = new CourseDetails(
         row[courseIndex],
         row[locationIndex],

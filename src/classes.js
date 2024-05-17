@@ -1,5 +1,5 @@
 class CourseDetails {
-    constructor(moduleName, deliveryMode, tutorName, studentDetails,  events, startDate, end) {
+    constructor(moduleName, deliveryMode, tutorName, studentDetails, events, startDate, end) {
         this.moduleName = moduleName;
         this.tutorName = tutorName;
         this.studentDetails = studentDetails;
@@ -19,7 +19,26 @@ class CourseDetails {
         return courseId;
     }
     sessions(){
-        return this.events.length
+      let courseData = getCourseData();
+      let sessions = 4;
+      for(i in courseData){
+          if(courseData[i][0].trim().includes(this.moduleName.trim())){
+              sessions = courseData[i][1];
+          }
+      }
+      if(sessions == 0){
+        return 4;
+      }
+      return sessions;
+    }
+    end(){
+      if(this.end){
+        return this.end;
+      } else {
+        let endDate = new Date(this.startDate);
+        Date.setDate(date.getDate()+(7*sessions()));
+        return endDate;
+      }
     }
 }
 

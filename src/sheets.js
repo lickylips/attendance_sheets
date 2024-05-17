@@ -344,6 +344,10 @@ function createSettingsSheet(docId, course, folderId){
     //email cert
     const emailRow = ["emailCert", true, "Should the cert be emailed upon generation"];
     settingsSheet.appendRow(emailRow);
+    if(course.productId){
+      const productRow = ["productId", course.productId, "ID of the product this course relates to"];
+      settingsSheet.appendRow(productRow);
+    }
     settingsSheet.getRange("B7").insertCheckboxes();
     settingsSheet.setFrozenRows(1);
     ss.moveActiveSheet(ss.getNumSheets());
