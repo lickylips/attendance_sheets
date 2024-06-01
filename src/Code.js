@@ -1,8 +1,5 @@
 //import "google-apps-script";
 
-function compileSheet(course){
-
-}
 
 function buildAttendanceSheet(course) {
   const ssTemplateId = "1cLnKKPwTuMNdA4NnwU0krGjOceXnof6pVeUZo8tS47c";
@@ -23,7 +20,7 @@ function buildAttendanceSheet(course) {
   const existingFile = findFileByName(datedFolder, fileTitle);
   if (existingFile) {
     // Rename the existing file with "deprecated-Do Not Use" prefix
-    const newFileName = "deprecated-Do Not Use - " + existingFile.getName();
+    const newFileName = "Deprecated-Do Not Use - " + existingFile.getName();
     existingFile.setName(newFileName);
   }
   const datedFolderId = datedFolder.getId();
@@ -66,7 +63,7 @@ function findDestinationFolder(course) {
     let newFolder = rootFolder.createFolder(course.moduleName);
     destinationFolderId = newFolder.getId();
   }
-
+  Logger.log("Destination Folder Id: "+destinationFolderId);
   return destinationFolderId;
 }
 
@@ -141,7 +138,7 @@ function buildCourse(ssId){
     tutorIndex, firstNameIndex, startDateIndex, 
     sponsorIndex, endIndex, address1Index, 
     address2Index, cityIndex, homePhoneIndexIndex,
-    mobilePhoneIndexIndex;
+    mobilePhoneIndexIndex, bookingNumberIndex;
   for(i in data[0]){
     if(data[0][i].includes("Course")){courseIndex = Number(i);}
     if(data[0][i].includes("Participants (details)")){participantIndex = Number(i);}
@@ -158,6 +155,7 @@ function buildCourse(ssId){
     if(data[0][i].includes("Participant - City")){cityIndex = Number(i);}
     if(data[0][i].includes("Participant - Telephone (home)")){homePhoneIndexIndex = Number(i);}
     if(data[0][i].includes("Participant - Telephone (mobile)")){mobilePhoneIndexIndex = Number(i);}
+    if(data[0][i].includes("Booking number")){bookingNumberIndex = Number(i);}
   }
   data.shift(); //drop header row
   //find all courses on this date
@@ -175,6 +173,7 @@ function buildCourse(ssId){
         row[sponsorIndex],
         row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
         "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
+        row[bookingNumberIndex],
       );
       courseKeys.push(courseKey);
       let course = new CourseDetails(
@@ -200,6 +199,7 @@ function buildCourse(ssId){
             row[sponsorIndex],
             row[address1Index]+"\n"+row[address2Index]+"\n"+row[cityIndex],
             "mobile: "+row[mobilePhoneIndexIndex]+" home: "+row[homePhoneIndexIndex],
+            row[bookingNumberIndex],
           );
           course.studentDetails.push(student);
         }
@@ -227,12 +227,11 @@ function convertExcelToGoogleSheets(xlsId) {
 
 function processUpload(e){
   Logger.log("Processing Upload");
-  let errorLog= "Errors: \n";
   const xlsUrl = e.values[2];
   const email = e.values[1];
   const xlsId = xlsUrl.substring(33, xlsUrl.length);
   const ssId = convertExcelToGoogleSheets(xlsId);
-  let courses = buildCourse(ssId);
+  let courses = compileCourses(ssId);
   let opSheets = [];
   for(course of courses){
     try{
@@ -244,13 +243,11 @@ function processUpload(e){
       opSheets.push(opCourse);
     }
     catch(err){
-      errorLog += err + "\n";
+      Logger.log(err)
     } 
   }
   emailAttendanceSheets(email, opSheets);
   publishAttendanceSheets(opSheets);
-  Logger.log(errorLog);
-  emailErrorLog(errorLog);
 }
 
 function triggerBuild(){

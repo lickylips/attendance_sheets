@@ -74,6 +74,10 @@ function createSummarySheet(docId, course){
 
   //Student rows
   let number = 1;
+  //figure out if we're using the old studentDetails or the new getLearners()
+  if(course.studentDetails == null){
+    course.studentDetails = course.getLearners();
+  }
   for(student of course.studentDetails){
     summarySheet.getRange(startRow,1).setValue(number);
     summarySheet.getRange(startRow,2).setValue(student.getName());

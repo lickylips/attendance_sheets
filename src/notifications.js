@@ -79,6 +79,7 @@ function extractEmail(input) {
     const message = template.evaluate().getContent();
     const mail = {
       to: email,
+      cc: "sean.obrien@ncutraining.ie",
       replyTo: "info@ncultd.ie",
       subject: "Upcoming Course Attendance Sheets",
       htmlBody: message
@@ -107,11 +108,12 @@ function extractEmail(input) {
 
 function emailErrorLog(error){
   Logger.log("Sending error log email");
+  const today = new Date();
   const email = "sean.obrien@ncutraining.ie";
   const mail = {
     to: email,
     replyTo: "info@ncultd.ie",
-    subject: "Error Log",
+    subject: "Error Log "+today,
     body: error
   };
   MailApp.sendEmail(mail);

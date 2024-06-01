@@ -48,8 +48,7 @@ function buildCompletionLetter(content, settings) {
 
 
   function linkLetter(student, url){
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const studentSheet = ss.getSheetByName("Document Generator");
+    const studentSheet = getStudentArray();
     const studentArray = studentSheet.getDataRange().getValues();
     let nameCol, emailCol, linkCol;
     for(i in studentArray[0]){

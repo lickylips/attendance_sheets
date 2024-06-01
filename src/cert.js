@@ -52,23 +52,9 @@ function generateCert(content, settings){
   return pdf;
 }
 
-function getSettings(docId){
-  const ss = SpreadsheetApp.openById(docId);
-  const settingsSheet = ss.getSheetByName("Settings");
-  const settingsArray = settingsSheet.getDataRange().getValues();
-  const settings = {};
-  for(i in settingsArray){
-    settings[settingsArray[i][0]] = settingsArray[i][1];
-  }
-  return settings;
-}
 
-function readSheet(docId){
-  const ss = SpreadsheetApp.openById(docId);
-  const studentsSheet = ss.getSheetByName("Document Generator");
-  const studentsArray = studentsSheet.getDataRange().getValues();
-  return studentsArray;
-}
+
+
 
 function buildStudentObject(studentArray, settings){
   class Student{
@@ -131,7 +117,8 @@ function createContent(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const docId = ss.getId();
   const settings = getSettings(docId);
-  const studentsArray = readSheet(docId);
+  const studentsSheet = getStudentArray(docId);
+  const studentsArray = studentsSheet.getDataRange().getValues();
   const content = buildStudentObject(studentsArray, settings);
   return content;
 }
@@ -154,43 +141,7 @@ function markSent(student){
   }
 }
 
-function getOrCreateCertsFolder(parentFolderId) {
-  var parentFolder = DriveApp.getFolderById(parentFolderId);
-  var existingCerts = parentFolder.getFoldersByName("Certs");
 
-  if (existingCerts.hasNext()) {
-    // "Certs" folder exists, return its ID
-    return existingCerts.next().getId(); 
-  } else {
-    // "Certs" folder doesn't exist, create it and return the ID
-    var newCertsFolder = parentFolder.createFolder("Certs");
-    return newCertsFolder.getId();
-  }
-}
-
-/**
- * getOrCreateDatedFolder
- * Funcrtion to find if there is a dated folder for the start
- * date of a given course in the cours named folder
- * @param {object} parentFolder 
- * @param {object} folderDate 
- * @returns {object} folderName
- */
-function getOrCreateDatedFolder(parentFolder, folderDate) {
-  // Format the date as YYYY-MM-DD
-  const formattedDate = Utilities.formatDate(folderDate, "GMT", "yyyy-MM-dd");
-
-  // Get folders within the parent folder matching the date pattern
-  const folders = parentFolder.getFoldersByName(formattedDate);
-
-  // If a folder already exists, return it
-  if (folders.hasNext()) {
-    return folders.next();
-  } else {
-    // If the folder doesn't exist, create it and return it
-    return parentFolder.createFolder(formattedDate);
-  }
-}
 
 function emailNewCert(pdf, student, settings){
   const attachment = pdf.getBlob();
@@ -212,8 +163,7 @@ function emailNewCert(pdf, student, settings){
 
 function linkPdf(student, pdf){
   const url = pdf.getUrl();
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const studentSheet = ss.getSheetByName("Document Generator");
+  const studentSheet = getStudentArray();
   const studentArray = studentSheet.getDataRange().getValues();
   let nameCol, emailCol, certCol;
   for(i in studentArray[0]){

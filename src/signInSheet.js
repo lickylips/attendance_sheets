@@ -91,6 +91,10 @@ function createSignInSheet(docId, course){
   
     startRow++;
     //Student rows
+    //figure out if we're using the old studentDetails or the new getLearners()
+    if(course.studentDetails == null){
+        course.studentDetails = course.getLearners();
+      }
     for(let i=0; i<course.studentDetails.length; i++){
       siSheet.getRange(startRow, 1).setValue(i+1)
                                     .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);

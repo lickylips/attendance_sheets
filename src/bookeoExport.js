@@ -3,7 +3,7 @@ function getBookeoBookingsForDate(date, productId) {
     //date = new Date();
     date = new Date("2024-05-03"); // For testing purposes
   }
-  const apiKey = 'AKEJWP7UJA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
   const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
   const apiUrlBase = 'https://api.bookeo.com/v2/'; 
 
@@ -36,7 +36,7 @@ function getCoursesForDate(date) {
     //date = new Date();
     date = new Date("2024-05-03"); // For testing purposes
   }
-  const apiKey = 'AKEJWP7UJA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
   const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
   const apiUrlBase = 'https://api.bookeo.com/v2/';
 
@@ -127,4 +127,245 @@ function buildBookeoCourses2(date){
     Logger.log(bookings);
   }
   Logger.log(productNames);
+}
+
+function updateBookeoBookings() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift(); // Remove and store the header row
+
+  const bookingIdIndex = headers.indexOf("Booking ID");
+  const nameIndex = headers.indexOf("Name");
+  const emailIndex = headers.indexOf("Email");
+
+  const apiKey = "AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11"; // Replace with your Bookeo API Key
+  const secretKey = "5ajggnHkopp3KCWXnHN5BDJRYjK3oweX"; // Replace with your Bookeo Secret Key
+  const apiUrl = "https://api-bookings.bookeo.com/v2";
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const bookingId = row[bookingIdIndex];
+    const newName = row[nameIndex];
+    const newEmail = row[emailIndex];
+
+    // Update only if both name and email are present
+    if (newName && newEmail) {
+      const payload = {
+        customer: {
+          name: newName,
+          email: newEmail
+        }
+      };
+
+      const options = {
+        'method': 'post',
+        'contentType': 'application/json',
+        'headers': {
+          'X-Bookeo-apiKey': apiKey,
+          'X-Bookeo-secretKey': secretKey,
+        },
+        'payload': JSON.stringify(payload)
+      };
+
+      const response = UrlFetchApp.fetch(apiUrl + "/bookings/" + bookingId + "/change", options);
+
+      // Error handling and logging (customize as needed)
+      if (response.getResponseCode() === 200) {
+        Logger.log("Booking updated successfully: " + bookingId);
+      } else {
+        Logger.log("Error updating booking: " + bookingId);
+        Logger.log(response.getContentText());
+      }
+    }
+  }
+}
+
+function getBookingById(bookingId){
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
+  const apiUrlBase = 'https://api.bookeo.com/v2/'; 
+
+  // Construct API request URL
+  let url = `${apiUrlBase}bookings/${bookingId}?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
+  url+= "&expandCustomer=true";
+  url+= "&expandParticipants=true";
+
+  // Fetch data from Bookeo API
+  const response = UrlFetchApp.fetch(url);
+  const bookingsData = JSON.parse(response.getContentText());
+
+
+  Logger.log(url);
+  return bookingsData;
+}
+
+function testGetBookingById(){
+  const bookingId = "22405213108336";
+  const bookings = getBookingById(bookingId);
+  Logger.log(bookings);
+}
+
+function updateBooking(bookingId, updatedData) {
+  // Bookeo API Endpoint and Authentication
+  const apiEndpoint = 'https://api.bookeo.com/v2/bookings/'; 
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
+
+  // Prepare the Request Payload
+  const payload = updatedData;
+
+  // Make the API Request
+  const options = {
+    'method': 'put', // Use the PUT method for updates
+    'contentType': 'application/json',
+    'headers': {
+      'X-Bookeo-apiKey': apiKey,
+      'X-Bookeo-secretKey': secretKey,
+    },
+    'payload': JSON.stringify(payload),
+  };
+
+  try {
+    const response = UrlFetchApp.fetch(apiEndpoint + bookingId, options);
+    if (response.getResponseCode() === 200) {
+      const updatedBooking = JSON.parse(response.getContentText());
+      Logger.log('Booking updated successfully:', updatedBooking);
+      return updatedBooking; // Return the updated booking data
+    } else {
+      Logger.log('Error updating booking:', response.getContentText());
+      throw new Error('Booking update failed');
+    }
+  } catch (error) {
+    Logger.log('Error updating booking:', error);
+    throw error;
+  }
+}
+
+function testUpdateBooking(){
+  const bookingId = "22405213108336";
+  const updatedData = {
+    productId: "2226YRYY3163AB95546C",
+    eventId: "2226YRYY3163AB95546C_222C4X34W18F9A7EC341_2024-06-01",
+    customer: {
+      id: "22243EEYY18F9A81A311",
+      firstName: "Seán",
+      lastName: "O'Brien",
+    },
+    participants: {
+      "numbers": [
+        {
+            "peopleCategoryId": "Cadults",
+            "number": 11
+        }
+      ],
+      details: [ // Array for adding participants
+        {
+          personId: "PNEW",
+          peopleCategoryId: "Cadults",
+          personDetails: {
+            firstName: "Janette",
+            lastName: "Smyth",
+          },
+          categoryIndex: 1,
+        },
+        {
+          personId: "PNEW",
+          personDetails: {
+            firstName: "Seán",
+            lastName: "O'Brien",
+            email: "sean.obrien@ncutraining.ie",
+          },
+          peopleCategoryId: "Cadults",
+          categoryIndex: 2,
+        }
+      ]
+    }
+  };
+  const updatedBooking = updateBooking(bookingId, updatedData);
+  Logger.log(updatedBooking);
+}
+
+function getCourseSettings(productId){
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
+  const apiUrlBase = 'https://api.bookeo.com/v2/';
+
+  // Construct API request URL
+  let url = `${apiUrlBase}settings/products?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
+  Logger.log(url);
+
+  // Fetch data from Bookeo API 
+  const response = UrlFetchApp.fetch(url);
+  const products = JSON.parse(response.getContentText());
+  const product = products.data.find(product => product.productId === productId);
+
+  return product;
+}
+
+function testgetCourseSettings(){
+  const productId = "224XW643R149D19C779C";
+  const courseSettings = getCourseSettings(productId);
+  Logger.log(courseSettings);
+}
+
+function updateFromBookeo(){
+  const sheet = getStudentArray();
+  const studentArray = sheet.getDataRange().getValues();
+  let headers = studentArray.shift()
+  let bookings = []; 
+  let nameIndex, emailIndex, dateIndex, paidIndex, 
+    coursePassedIndex, sentIndex, sponsorIndex, 
+    letterIndex, certIndex, bookingIdIndex, tutorIndex, 
+    addressIndex, phoneIndex, personNumberIndex;
+  for(i in headers){
+    if(headers[i].includes("Name")){ nameIndex = Number(i);}
+    if(headers[i].includes("Email")){ emailIndex = Number(i);}
+    if(headers[i].includes("Date")){ dateIndex = Number(i);}
+    if(headers[i].includes("Paid")){ paidIndex = Number(i);}
+    if(headers[i].includes("Course Passed")){ coursePassedIndex = Number(i);}
+    if(headers[i].includes("Sent")){ sentIndex = Number(i);}
+    if(headers[i].includes("Sponsor Contact")){sponsorIndex = Number(i);}
+    if(headers[i].includes("Letter")){letterIndex = Number(i);}
+    if(headers[i].includes("Cert")){certIndex = Number(i);}
+    if(headers[i].includes("Tutor")){tutorIndex = Number(i);}
+    if(headers[i].includes("Person Number")){personNumberIndex = Number(i);}
+    if(headers[i].includes("Booking ID")){bookingIdIndex = Number(i);}
+    if(headers[i].includes("Address")){addressIndex = Number(i);}
+    if(headers[i].includes("Phone")){phoneIndex = Number(i);}
+  }
+  for(let i=0; i<studentArray.length; i++){
+    if(bookings.includes(studentArray[i][bookingIdIndex])){
+      continue;
+    } else {
+      bookings.push(studentArray[i][bookingIdIndex]);
+    }
+    let learner = studentArray[i];
+    let bookeoLearner = getLearnerDetails(learner[bookingIdIndex], learner[personNumberIndex]);
+    let row = i+2;
+    let col = nameIndex+1;
+    sheet.getRange(row, col).setValue(bookeoLearner.personDetails.firstName + " " + bookeoLearner.personDetails.lastName);
+  }
+}
+
+function getLearnerDetails(bookingId, personNumber){
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
+  const apiUrlBase = 'https://api.bookeo.com/v2/';
+  const booking = getBookingById(bookingId);
+  Logger.log(booking);
+  const personDetails = booking.participants.details;
+  for(person of personDetails){
+    if(person.categoryIndex === personNumber){
+      return person;
+    }
+  }
+  Logger.log(person)
+  return person;
+}
+
+function testgetLearnerDetails(){
+  const bookingId = "22402237741173";
+  const personNumber = 1;
+  const learnerDetails = getLearnerDetails(bookingId, personNumber);
+  Logger.log(learnerDetails);
 }
