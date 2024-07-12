@@ -501,6 +501,12 @@ function createSignInSheet(docId, course){
   siSheet.setHiddenGridlines(true);
 }
 
+/**
+ * Creates a summary sheet in the given spreadsheet document.
+ *
+ * @param {string} docId - The ID of the spreadsheet document.
+ * @param {Object} course - An object containing course details.
+ */
 function createSummarySheet(docId, course){
   Logger.log("creating summary sheet");
   const ss = SpreadsheetApp.openById(docId);

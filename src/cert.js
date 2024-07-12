@@ -99,7 +99,9 @@ function buildStudentObject(studentArray, settings){
   for(i in studentArray){
     let name = studentArray[i][nameCol];
     let email = studentArray[i][emailCol];
-    let date = studentArray[i][dateCol];
+    let date;
+    if(settings.endDate == null){date = studentArray[i][dateCol];}
+    else{date = settings.endDate;}
     let paid = studentArray[i][paidCol];
     let coursePassed = studentArray[i][coursePassedCol];
     let sent = studentArray[i][sentCol]
@@ -123,9 +125,10 @@ function createContent(){
   return content;
 }
 
-function markSent(student){
+function markSent(student, sheetName){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const studentSheet = ss.getSheetByName("Document Generator");
+  if(!sheetName){sheetName = "Document Generator";}
+  const studentSheet = ss.getSheetByName(sheetName);
   const studentArray = studentSheet.getDataRange().getValues();
   let nameCol, emailCol, sentCol;
   for(i in studentArray[0]){

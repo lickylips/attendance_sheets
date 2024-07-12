@@ -37,9 +37,12 @@ function compileCourses(ssId){
     const courseKeys = [];
     const courses = [];
     for(row of data){
+      const millisecondsInEightHours = 8 * 60 * 60 * 1000;
+      let gmtStartDate = new Date(Date.parse(row[startDateIndex]));
+      let gmtEndDate = new Date(Date.parse(row[endIndex]));
       const courseKey = row[courseIndex] + " - " + row[tutorIndex]; // Composite key
-      let gmtStartDate = new Date(row[startDateIndex] + ' GMT');
-      let gmtEndDate = new Date(row[endIndex] + ' GMT');
+
+
       if(courseKeys.indexOf(courseKey) == -1){ //if course not already added
         Logger.log("New course "+row[courseIndex]+" Being Created")
         courseKeys.push(courseKey);

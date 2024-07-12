@@ -163,6 +163,7 @@ function buildCourse(ssId){
   const courseKeys = [];
   const courses = [];
   for(row of data){
+    Logger.log("Row: "+row[courseIndex]+" "+row[tutorIndex]);
     const courseKey = row[courseIndex] + " - " + row[tutorIndex]; // Composite key
     if(courseKeys.indexOf(courseKey) == -1){ //if course not already added
       Logger.log("New course "+row[courseIndex]+" Being Created")
@@ -220,9 +221,18 @@ function convertExcelToGoogleSheets(xlsId) {
     mimeType: MimeType.GOOGLE_SHEETS
   };
 
-  // Drive API v3 method 
+  // Drive API v3 method to create and convert
   let spreadsheet = Drive.Files.create(config, blob, {"convert": true});  
-  return spreadsheet.id;
+  let ssId = spreadsheet.id;
+  Logger.log(ssId);
+
+
+  // Open the newly created Spreadsheet and set locale
+  let ss = SpreadsheetApp.openById(ssId);
+  ss.setSpreadsheetTimeZone("GMT"); 
+
+
+  return ssId; // Return the ID of the Spreadsheet
 }
 
 function processUpload(e){
@@ -356,4 +366,12 @@ function findOrInsertDate(body, targetDate) {
   let dateParagraph = body.insertParagraph(1, targetDateString);
   dateParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING1);
   return 1;
+}
+
+function testDate(){
+  ssid = "1745MOHpoyVZQYJwbH0EAumu2qOGnIwtN7pskaFPsqTM";
+  ss = SpreadsheetApp.openById(ssid);
+  sheet = ss.getSheetByName("Main");
+  data = sheet.getDataRange().getValues();
+  Logger.log(data);
 }
