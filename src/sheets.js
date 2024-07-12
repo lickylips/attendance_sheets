@@ -127,8 +127,16 @@ function createCertGenerator(docId, course){
                      .setWrap(true)
                      .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange(3,3,4).merge();
+  sheet.getRange(3,4).setValue("Course Completed")
+                     .setBackground("#FFC980")
+                     .setFontColor("#4B3A71")
+                     .setHorizontalAlignment("center")
+                     .setFontWeight("bold")
+                     .setWrap(true)
+                     .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange(3,4,4).merge();
   //weeks and sessions
-  let startCol = 4;
+  let startCol = 5;
   let numberOfSessions = course.sessions();
   Logger.log("Course ID: "+ course.courseId());
   Logger.log("Number of Sessions: "+numberOfSessions);
@@ -168,7 +176,8 @@ function createCertGenerator(docId, course){
     let studentRange = sheet.getRange(studentRow, 1).setValue(student.getName());
     sheet.getRange(studentRow, 2).setValue(student.email);
     sheet.getRange(studentRow, 3).insertCheckboxes();
-    for(i=4; i<sheet.getLastColumn(); i++){
+    sheet.getRange(studentRow, 4).insertCheckboxes();
+    for(i=5; i<sheet.getLastColumn(); i++){
       let test = sheet.getRange(5, i).getValues();
       if(test[0][0].toString().includes("Present")){
         sheet.getRange(studentRow, i).insertCheckboxes();
