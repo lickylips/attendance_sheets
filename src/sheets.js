@@ -51,6 +51,10 @@ function createCertGenerator(docId, course){
     }
     ss.setFrozenRows(1);
     certSheet.getDataRange().setVerticalAlignment("TOP");
+    ss.moveActiveSheet(ss.getNumSheets());
+    //protect sheet
+    let protection = certSheet.protect().setDescription("This sheet is protected. Access to sales team only");
+    protection.addEditor("sales@ncutraining.ie")
     Logger.log("Finished Creating Document Generator Sheet");
   }
 
@@ -395,7 +399,11 @@ function createSettingsSheet(docId, course, folderId){
     }
     settingsSheet.getRange("B7").insertCheckboxes();
     settingsSheet.setFrozenRows(1);
+    //move sheet to end
     ss.moveActiveSheet(ss.getNumSheets());
+    //protect sheet
+    let protection = settingsSheet.protect().setDescription("This sheet is protected. Access to sales team only");
+    protection.addEditor("sales@ncutraining.ie")
     Logger.log("Created Settings Sheet");
 }
 

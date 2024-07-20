@@ -118,3 +118,39 @@ function emailErrorLog(error){
   };
   MailApp.sendEmail(mail);
 }
+
+function emailLetter(pdf, student, settings){
+  const attachment = pdf;
+  let template = HtmlService.createTemplateFromFile("letterEmail");
+  template.student = student;
+  template.settings = settings;
+  const message = template.evaluate().getContent();
+  const email = {
+    to: student.email,
+    replyTo: "info@ncutraining.ie",
+    cc: "",
+    subject: "Letter of Completion",
+    htmlBody: message,
+    attachments: [attachment]
+  }
+  if(student.sponsor){email.cc = student.sponsor;}
+  MailApp.sendEmail(email);
+}
+
+function emailNewCert(pdf, student, settings){
+  const attachment = pdf.getBlob();
+  let template = HtmlService.createTemplateFromFile("certEmail");
+  template.student = student;
+  template.settings = settings;
+  const message = template.evaluate().getContent();
+  const email = {
+    to: student.email,
+    replyTo: "info@ncutraining.ie",
+    cc: "",
+    subject: "Certificate of Completion",
+    htmlBody: message,
+    attachments: [attachment]
+  }
+  if(student.sponsor){email.cc = student.sponsor;}
+  MailApp.sendEmail(email);
+}

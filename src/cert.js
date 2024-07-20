@@ -79,6 +79,18 @@ function buildStudentObject(studentArray, settings){
       let renewsOnDate = new Date(issuedOnDate.setFullYear(issuedOnDate.getFullYear()+settings.renewalDuration))
       return renewsOnDate;
     }
+    courseCompleted(){
+      //get attendance Sheet data
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const attendanceSheet = ss.getSheetByName(settings.courseName);
+      const data = attendanceSheet.getDataRange().getValues();
+      //find course complete col
+      let courseCompleteIndex = data[2].indexOf("Course Completed");
+      Logger.log(courseCompleteIndex);
+      let studentRow = data.find(row => row[0] == this.name);
+      let courseComplete = studentRow[courseCompleteIndex];
+      return courseComplete;
+    }
   }
   //get headding cols
   let headers = studentArray.shift()
@@ -146,23 +158,6 @@ function markSent(student, sheetName){
 
 
 
-function emailNewCert(pdf, student, settings){
-  const attachment = pdf.getBlob();
-  let template = HtmlService.createTemplateFromFile("certEmail");
-  template.student = student;
-  template.settings = settings;
-  const message = template.evaluate().getContent();
-  const email = {
-    to: student.email,
-    replyTo: "info@ncultd.ie",
-    cc: "",
-    subject: "Certificate of Completion",
-    htmlBody: message,
-    attachments: [attachment]
-  }
-  if(student.sponsor){email.cc = student.sponsor;}
-  MailApp.sendEmail(email);
-}
 
 function linkPdf(student, pdf){
   const url = pdf.getUrl();

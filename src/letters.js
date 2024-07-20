@@ -14,7 +14,7 @@ function buildCompletionLetter(content, settings) {
 
   newLetter = DocumentApp.openById(newLetterId);
   const body = newLetter.getBody();
-
+  content.date.setHours(12, 0, 0, 0);//Set the date to noon to account for DST changes
   const dateFormatted = Utilities.formatDate(content.date, "GMT", "EEE MMM dd yyyy");
   body.replaceText("{{STUDENT NAME}}", content.name);
   body.replaceText("{{COURSE NAME}}", settings.courseName);
@@ -40,7 +40,17 @@ function buildCompletionLetter(content, settings) {
     }
     body.replaceText("{{SIGNATURE IMAGE}}", "");
   }
-  
+  //Email letter if required
+  Logger.log(settings.emailCert);
+  Logger.log(content.email);
+  Logger.log(content.letter);
+  if (settings.emailCert && content.email && content.letter!="Letter") {
+    Logger.log("emailing letter");
+    //create pdf version of letter.
+    newLetter.saveAndClose();
+    const pdf= newLetter.getAs("application/pdf");
+    emailLetter(pdf, content, settings);
+  }
   
   const url = newLetter.getUrl();
   return url;
