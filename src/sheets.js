@@ -379,7 +379,7 @@ function createSettingsSheet(docId, course, folderId){
     const folderRow = ["exportFolder", folderId, "ID Of the folder where the certs should go"];
     settingsSheet.appendRow(folderRow);
     //email cert
-    const emailRow = ["emailCert", true, "Should the cert be emailed upon generation"];
+    const emailRow = ["emailCert", false, "Should the cert be emailed upon generation"];
     settingsSheet.appendRow(emailRow);
     //delivery Mode 
     const deliveryModeRow = ["deliveryMode", course.deliveryMode, "Delivery mode of the cert, either Online or Printed"];
