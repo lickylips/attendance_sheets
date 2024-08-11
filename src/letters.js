@@ -76,7 +76,7 @@ function buildCompletionLetter(content, settings) {
 
   function findLetterTemplate(courseName){
     let templateId;
-    if(courseName.includes("Safe Pass") || courseName.includes("safepass")){
+    if(courseName.includes("Safe Pass") || courseName.includes("safepass") || courseName.includes("Safepass")){
         templateId = "19LyYJ8XPlVp6FZTQcsFOBXSbYwU964rAbeTE8CuUbcY"
     }
     else {

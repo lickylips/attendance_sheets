@@ -65,11 +65,11 @@ class StudentDetails {
   }
 
   class LearnerDetails {
-    constructor(firstName, lastName, email, sponsorEmail, address, phone, bookingId, personNumber, paid = false, passed = false, sent = false, letterUrl = "", certUrl = "") {
+    constructor(firstName, lastName, email, sponsor, address, phone, bookingId, personNumber, paid = false, passed = false, sent = false, letterUrl = "", certUrl = "") {
       this.firstName = firstName;
       this.lastName = lastName;
       this.email = email;
-      this.sponsorEmail = sponsorEmail;
+      this.sponsor = sponsor;
       this.address = address;
       this.phone = phone;
       this.bookingId = bookingId;

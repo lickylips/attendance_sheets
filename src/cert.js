@@ -72,23 +72,27 @@ function buildStudentObject(studentArray, settings){
     }
     issuedOn(){
       let issuedOnDate = new Date(this.date);
+      issuedOnDate.setHours(12, 0, 0, 0);//Set the date to noon to account for DST changes
       return issuedOnDate;
     }
     renewsOn(){
       let issuedOnDate = new Date(this.date);
       let renewsOnDate = new Date(issuedOnDate.setFullYear(issuedOnDate.getFullYear()+settings.renewalDuration))
+      renewsOnDate.setHours(12, 0, 0, 0);//Set the date to noon to account for DST changes
       return renewsOnDate;
     }
     courseCompleted(){
       //get attendance Sheet data
       const ss = SpreadsheetApp.getActiveSpreadsheet();
-      const attendanceSheet = ss.getSheetByName(settings.courseName);
+      const attendanceSheet = ss.getSheets()[0];
       const data = attendanceSheet.getDataRange().getValues();
       //find course complete col
       let courseCompleteIndex = data[2].indexOf("Course Completed");
-      Logger.log(courseCompleteIndex);
-      let studentRow = data.find(row => row[0] == this.name);
-      let courseComplete = studentRow[courseCompleteIndex];
+      let courseComplete = false;
+      if(this.name != null){
+        let studentRow = data.find(row => row[0] == this.name);
+        courseComplete = studentRow[courseCompleteIndex];
+      }
       return courseComplete;
     }
   }
