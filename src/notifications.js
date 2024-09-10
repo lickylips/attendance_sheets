@@ -89,7 +89,42 @@ function extractEmail(input) {
 
   function tutorNotificationEmail(course, url){
     Logger.log("Sending tutor notification email");
-    const tutorEmail = extractEmail(course.tutor);
+    //tutor email look up
+    const tutorSheetId = "1FtKPRTCxCZSSv2vGngOJnx8n-AA6POCz2pXPAvW5jZ0";
+    const tutorSS = SpreadsheetApp.openById(tutorSheetId);
+    const tutorSheet = tutorSS.getSheetByName("Sheet1");
+    const tutorData = tutorSheet.getDataRange().getValues();
+    let primaryEmail, secondaryEmail;
+    for(row of tutorData){
+      if(row[0].includes(course.tutorName)  && row[0].trim() !== ""){
+        Logger.log("Found Tutor "+row[0])
+        if (row[2].charAt(0) === '<'){
+          primaryEmail = row[2].replace(/[<>]/g, '');
+        } else {
+          primaryEmail = row[2];
+        }
+        Logger.log("Primary Email: "+primaryEmail);
+        if (row[1].charAt(0) === '<'){
+          secondaryEmail = row[1].replace(/[<>]/g, '');
+        } else {
+          secondaryEmail = row[1];
+        }
+        Logger.log("Secondary Email: "+secondaryEmail);
+      }
+    }
+
+    let tutorEmail;
+    if(primaryEmail != "" && secondaryEmail != ""){
+      tutorEmail = primaryEmail+", "+secondaryEmail;
+    } else if(primaryEmail != "" && secondaryEmail==""){
+      tutorEmail = primaryEmail;
+    } else if(secondaryEmail != ""  && primaryEmail == ""){
+      tutorEmail = secondaryEmail;
+    } else {
+      tutorEmail = "sales@ncutraining.ie";
+    }
+    course.tutorEmail = tutorEmail;
+    Logger.log("Tutor Emails: "+tutorEmail)
     let template = HtmlService.createTemplateFromFile("tutorEmail");
     const messageContent = {
       url: url,
@@ -98,12 +133,14 @@ function extractEmail(input) {
     template.messageContent = messageContent;
     const message = template.evaluate().getContent();
     const mail = {
-      to: course.tutorEmail(),
-      replyTo: "info@ncultd.ie",
+      to: tutorEmail,
+      cc: "sales@ncutraining.ie",
+      //cc: "sean.obrien@ncutraining.ie", //for testing
+      replyTo: "info@ncutraining.ie",
       subject: "Upcoming GNC Course Details",
       htmlBody: message
     }
-      
+    MailApp.sendEmail(mail);
   }
 
 function emailErrorLog(error){
@@ -153,4 +190,84 @@ function emailNewCert(pdf, student, settings){
   }
   if(student.sponsor){email.cc = student.sponsor;}
   MailApp.sendEmail(email);
+}
+
+function getAttendanceRecords(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const settings = getSettings(ss.getId());
+  const sheet = ss.getSheets()[0];
+  const attendanceData = sheet.getDataRange().getValues();
+  const generatorSheet = ss.getSheetByName("Document Generator");
+  const generatorData = generatorSheet.getDataRange().getValues();
+  //find list of students and their attendance records
+  const records = [];
+  for(i=6; i<attendanceData.length; i++){
+    let student = {
+      name: attendanceData[i][0],
+      settings: settings
+    }
+    for(j=1; j<attendanceData[i].length; j++){
+      if(attendanceData[i][j] === true || attendanceData[i][j] === false){
+        let session = attendanceData[2][j];
+        student[session]=attendanceData[i][j];
+        student[session+"notes"]=attendanceData[i][j+1];      
+      }
+    }
+    for(row of generatorData){
+      if(row[0] === student.name){
+        student.sponsor = row[2];
+        student.bookingId = row[12];
+        student.number = row[13];
+      }
+    }
+    if(student.name.trim() !== ""){
+      records.push(student);
+    } else {
+    }
+  }
+  return records;
+}
+
+function emailDailyAttendanceRecord(){
+  const records = getAttendanceRecords();
+  const sponsors = [];
+  const settings = records[0].settings;
+  for(student of records){
+    let index = sponsors.findIndex(sponsor => sponsor.email === student.sponsor);
+    if(index === -1){
+      let sponsor = {
+        email: student.sponsor,
+        students: [student]
+      };
+      sponsors.push(sponsor);
+    } else {
+      sponsors[index].students.push(student);
+    }
+  }
+  if(!settings.numSessions){
+  if(compareTimestampsForSameDate(settings.startDate, settings.endDate)){
+      settings.numSessions = 1;
+    }
+  }
+  Logger.log(sponsors);
+  for(sponsor of sponsors){
+    let customer = getCustomerDetails(sponsor.students[0].bookingId);
+    Logger.log(customer);
+    sponsor.name = customer.firstName+" "+customer.lastName;
+    let template = HtmlService.createTemplateFromFile("attendanceRecordEmail");
+    template.content = {
+      settings: settings,
+      sponsor: sponsor
+    };
+    const message = template.evaluate().getContent();
+    const mail = {
+      to: sponsor.email,
+      //cc: "sales@ncutraining.ie",
+      cc: "sean.obrien@ncutraining.ie", //for testing
+      replyTo: "info@ncutraining.ie",
+      subject: "Daily Attendance Record",
+      htmlBody: message
+    }
+    MailApp.sendEmail(mail);
+  }
 }

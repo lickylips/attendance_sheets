@@ -29,6 +29,13 @@ function buildAttendanceSheet(course) {
   const opSheet = DriveApp.getFileById(ss.getId());
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(datedFolder);
+  try{
+    tutorNotificationEmail(course, opSheetUrl);
+  }
+  catch(err){
+    Logger.log("Error sending tutor notification email");
+    Logger.log(err);
+  }
   return opSheetUrl;
 }
 

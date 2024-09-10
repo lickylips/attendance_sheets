@@ -22,3 +22,22 @@ function readSheet() {
     }
     
 }
+
+function readAttendanceSheet(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheets()[0];
+  const data = sheet.getDataRange().getValues();
+  const sessionsRow = data[2];
+  const numSessions = countSessions(sessionsRow);
+  Logger.log(numSessions);
+}
+
+function countSessions(myArray) {
+  let count = 0;
+  for (let i = 0; i < myArray.length; i++) {
+    if (myArray[i].toLowerCase().includes("session")) {
+      count++;
+    }
+  }
+  return count;
+}

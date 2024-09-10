@@ -86,6 +86,7 @@ function buildStudentObject(studentArray, settings){
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       const attendanceSheet = ss.getSheets()[0];
       const data = attendanceSheet.getDataRange().getValues();
+      Logger.log(data[0]);
       //find course complete col
       let courseCompleteIndex = data[2].indexOf("Course Completed");
       let courseComplete = false;

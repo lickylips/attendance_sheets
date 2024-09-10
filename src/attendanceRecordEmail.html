@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      th {
+          background-color: #4b3a71;
+          color: white;
+      }
+  </style>
+  </head>
+  <body>
+    <p>Dear <?= content.sponsor.name ?></p>
+    <p>I'm writing to provide you with an update on your participant's attendance for <?= content.settings.courseName ?>.</p>
+    <p>Please find the attendance details below:</p>
+    <table>
+        <tr>
+            <th>Name</th>
+    <? for(i=0; i<content.settings.numSessions; i++){ ?>
+            <th>Session <?=i+1?></th>
+            <th>Session <?=i+1?> Notes</th>
+    <?}?>
+        </tr>
+        <? for (student of content.sponsor.students){ ?>
+          <tr>
+            <td><?=student.name?></td>
+            <? for (i=0; i<content.settings.numSessions; i++){ 
+              let sessionNumber = i+1;?>
+              <td><?= tickOrCross(student["Session "+sessionNumber])?></td>
+              <td><?= student["Session "+sessionNumber+"notes"]?></td>
+              <? } ?>
+            </tr>
+            <?}?>
+    </table>
+    <p>Yours</p>
+    <p>The NCU Team</p>
+  </body>
+</html>

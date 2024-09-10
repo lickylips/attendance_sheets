@@ -130,8 +130,8 @@ class StudentDetails {
     return sessions;
   }
   getEnd(){
-    if(this.end){
-      return this.end;
+    if(this.endDate){
+      return this.endDate;
     } else {
       let endDate = new Date(this.startDate);
       endDate.setDate(endDate.getDate()+(7*this.sessions()));

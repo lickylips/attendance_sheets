@@ -148,3 +148,21 @@ function getSettings(docId){
     const timeZone = "GMT" + (offsetHours >= 0 ? "+" : "") + offsetHours; // Construct GMT string
     return timeZone;
   }
+
+  function compareTimestampsForSameDate(timestamp1, timestamp2) {
+    var format = "yyyy-MM-dd"; // Format to extract only the date part
+  
+    var date1 = Utilities.formatDate(new Date(timestamp1), Session.getScriptTimeZone(), format);
+    var date2 = Utilities.formatDate(new Date(timestamp2), Session.getScriptTimeZone(), format);
+  
+    return date1 === date2; 
+  }
+
+  function tickOrCross(boolian){
+    if(boolian){
+      return "✅";
+    }
+    else{
+      return "❌";
+    }
+  }

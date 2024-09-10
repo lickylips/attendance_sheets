@@ -1,6 +1,7 @@
 /**
  * createCertGenerator
  * Function that creates a sheet with the students required for cert generation
+ * Sheet is now called document generator
  * @param {string} docId 
  * @param {object} course 
  */
@@ -385,7 +386,7 @@ function createSettingsSheet(docId, course, folderId){
     const deliveryModeRow = ["deliveryMode", course.deliveryMode, "Delivery mode of the cert, either Online or Printed"];
     settingsSheet.appendRow(deliveryModeRow);
     //tutor
-    const tutorRow = ["tutor", course.tutor, "Name of the tutor"];
+    const tutorRow = ["tutor", course.tutorName, "Name of the tutor"];
     settingsSheet.appendRow(tutorRow);
     //start date
     const startDateRow = ["startDate", course.startDate, "Start date of the course"];
@@ -396,6 +397,11 @@ function createSettingsSheet(docId, course, folderId){
     if(course.productId){
       const productRow = ["productId", course.productId, "ID of the product this course relates to"];
       settingsSheet.appendRow(productRow);
+    }
+    let numSessions = course.sessions();
+    if(numSessions > 0){
+      const sessionsRow = ["sessions", numSessions, "Number of sessions in the course"];
+      settingsSheet.appendRow(sessionsRow);
     }
     settingsSheet.getRange("B7").insertCheckboxes();
     settingsSheet.setFrozenRows(1);

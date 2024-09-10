@@ -363,6 +363,16 @@ function getLearnerDetails(bookingId, personNumber){
   return person;
 }
 
+function getCustomerDetails(bookingId){
+  const apiKey = 'AAMKM6EHRA3XP7XHU6FNE224NR4XX3148FA63EA11';
+  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
+  const apiUrlBase = 'https://api.bookeo.com/v2/';
+  const booking = getBookingById(bookingId);
+  const customer = booking.customer;
+  Logger.log(customer)
+  return customer;
+}
+
 function testgetLearnerDetails(){
   const bookingId = "22402237741173";
   const personNumber = 1;

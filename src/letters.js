@@ -15,7 +15,11 @@ function buildCompletionLetter(content, settings) {
   newLetter = DocumentApp.openById(newLetterId);
   const body = newLetter.getBody();
   content.date.setHours(12, 0, 0, 0);//Set the date to noon to account for DST changes
-  const dateFormatted = Utilities.formatDate(content.date, "GMT", "EEE MMM dd yyyy");
+  //changing date to be the day the letter is generated
+  //this was requested by suzanne on 2024-08-16
+  //in meeting with Chris & sales staff
+  const date = new Date();
+  const dateFormatted = Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy");
   body.replaceText("{{STUDENT NAME}}", content.name);
   body.replaceText("{{COURSE NAME}}", settings.courseName);
   body.replaceText("{{DATE}}", dateFormatted);

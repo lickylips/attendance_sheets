@@ -10,14 +10,19 @@
     </style>
   </head>
   <body>
-    <p>Dear <?= messageContent.name ?>,</p>
+    <? if(messageContent.course.tutorEmail === "sales@ncutraining.ie") { ?>
+      <p><b>Please Note. No Tutor Email was found for this tutor. Please update the tutor list</b></p>
+    <? } ?>
+    <p>Dear <?= messageContent.course.tutorName ?>,</p>
     <p>
-        The attendance sheet for the upcoming course you are delivering 
-        <?= messageContent.course ?> has been generated and can be found 
-        at the link below:
+      You are receiving this email because you are a tutor for the upcoming course 
+      <?= messageContent.course.moduleName ?> Starting on <?= Utilities.formatDate(messageContent.course.startDate, "GMT", "d MMMM yyyy") ?>.
     </p>
     <p>
-        <a href="<?= messageContent.url ?>"><?= messageContent.course?></a>
+      The Attendance sheet for this course has been generated and can be found at the link below:
+    </p>
+    <p>
+        <a href="<?= messageContent.url ?>"><?= messageContent.course.moduleName?></a>
     </p>
     <p>Yours</p>
     <p>The NCU Team</p>
