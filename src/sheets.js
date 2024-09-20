@@ -168,6 +168,8 @@ function createCertGenerator(docId, course){
     sheet.getRange(5, startCol+1,2,1).merge();
     startCol+=2
   }
+  sheet.getRange(6, startCol).setValue("BookingID");
+  sheet.getRange(6, startCol+1).setValue("Person Number");
 
   //Add Learner Details
   let studentRow = 7;
@@ -188,7 +190,8 @@ function createCertGenerator(docId, course){
         sheet.getRange(studentRow, i).insertCheckboxes();
       }
     }
-    sheet.getRange(studentRow, sheet.getLastColumn()).inser
+    sheet.getRange(studentRow, startCol).setValue(student.bookingId);
+    sheet.getRange(studentRow, startCol+1).setValue(student.personNumber);
     studentRow++
   }
   //course footer

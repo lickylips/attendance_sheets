@@ -20,17 +20,23 @@ function getBookeoBookingsForDate(date, productId) {
   if(productId) {
     url+= "&productId="+productId;
   }
-  Logger.log(url);
-
   // Fetch data from Bookeo API
   const response = UrlFetchApp.fetch(url);
   const bookingsData = JSON.parse(response.getContentText());
 
 
-  Logger.log(url);
+  Logger.log("Bookings for Date URL: "+url);
   return bookingsData;
 }
   
+
+function testGetBookeoBookingsForDate(){
+  const date = new Date("2024-09-17"); // For testing purposes
+  const productId = "2229XUEWF191DB0F6226";
+  const bookings = getBookeoBookingsForDate(date, productId);
+  Logger.log(bookings);
+}
+
 function getCoursesForDate(date) {
   if(!date) {
     //date = new Date();
@@ -52,26 +58,36 @@ function getCoursesForDate(date) {
   // Fetch data from Bookeo API
   const response = UrlFetchApp.fetch(url);
   const courseData = JSON.parse(response.getContentText());
-  Logger.log(url);
+  Logger.log("Courses for Date API URL: "+url);
 
   return courseData;
+}
+
+function testGetBookeoBookingsForDate(){
+  const date = new Date("2024-09-17");
+  const bookings = getBookeoBookingsForDate(date);
+  Logger.log(bookings);
 }
 
 function buildBookeoCourses(date){
   if(!date) {
     //date = new Date();
-    date = new Date("2024-05-03"); // For testing purposes
+    date = new Date("2024-09-17"); // For testing purposes
   }
+  Logger.log("Getting course data for date: " + date);
   const courseData = getCoursesForDate(date);
   const courses = courseData.data;
   const courseObjects = [];
+  Logger.log("Found " + courses.length + " courses");
   for(let course of courses){
+    Logger.log("Course: " + course.productId);
     const sessions = course.courseSchedule.events;
     const startDate = new Date(course.startTime);
     const endDate = new Date(sessions[sessions.length-1].endTime);
     const deliveryMode = course.courseSchedule.title;
     const tutorName = course.resources[0].name;
     const bookings = getBookeoBookingsForDate(startDate, course.productId).data;
+    Logger.log("Found " + bookings.length + " bookings");
     const moduleName = bookings[0].productName;
     let learners = [];
     for(let booking of bookings){
@@ -100,18 +116,19 @@ function buildBookeoCourses(date){
         const studentDetails = new StudentDetails(firstName, lastName, email, sponsor, address, phone);
         learners.push(studentDetails);
       }
+      Logger.log("Booking ID " + booking.bookingNumber + " has " + learners.length + " learners");
     }
     const courseObject = new CourseDetails(moduleName, deliveryMode, tutorName, learners, sessions, startDate, endDate);
-    Logger.log(sessions[0][0])
     courseObjects.push(courseObject);
   }
+  Logger.log("Compiled " + courseObjects.length + " courses");
   return courseObjects;
 }
 
 function buildBookeoCourses2(date){
   if(!date) {
     //date = new Date();
-    date = new Date("2024-05-03"); // For testing purposes
+    date = new Date("2024-09-17"); // For testing purposes
   }
   const bookings = getBookeoBookingsForDate(date);
   const productNames = [];
@@ -342,8 +359,15 @@ function updateFromBookeo(){
     let learner = studentArray[i];
     let bookeoLearner = getLearnerDetails(learner[bookingIdIndex], learner[personNumberIndex]);
     let row = i+2;
-    let col = nameIndex+1;
-    sheet.getRange(row, col).setValue(bookeoLearner.personDetails.firstName + " " + bookeoLearner.personDetails.lastName);
+    sheet.getRange(row, nameIndex+1).setValue(bookeoLearner.personDetails.firstName + " " + bookeoLearner.personDetails.lastName);
+    sheet.getRange(row, emailIndex+1).setValue(bookeoLearner.personDetails.emailAddress);
+    let address = bookeoLearner.personDetails.streetAddress.address1+"\n"+bookeoLearner.personDetails.streetAddress.address2
+    sheet.getRange(row, addressIndex+1).setValue(address);
+    let phone="";
+    for(numbers of bookeoLearner.personDetails.phoneNumbers){
+      phone+=numbers.type+":"+numbers.number+"\n";
+    }
+    sheet.getRange(row, phoneIndex+1).setValue(phone);
   }
 }
 
@@ -378,4 +402,21 @@ function testgetLearnerDetails(){
   const personNumber = 1;
   const learnerDetails = getLearnerDetails(bookingId, personNumber);
   Logger.log(learnerDetails);
+}
+
+function testBookeoCompileCourses(){
+  const date = new Date("2024-09-17");
+  let courses = buildBookeoCourses(date);
+  let email = "sean.obrien@ncutraining.ie, suzannefoster@ncutraining.ie, louisedunne@ncutraining.ie, jenniferknott@ncutraining.ie";
+  let opSheets = [];
+  for(course of courses){
+    let opSheet = buildAttendanceSheet(course);
+    let opCourse = {
+      course: course,
+      sheet: opSheet
+    };
+    opSheets.push(opCourse);
+  }
+  //emailAttendanceSheets(email, opSheets);
+  //publishAttendanceSheets(opSheets);
 }

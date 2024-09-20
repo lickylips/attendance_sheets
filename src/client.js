@@ -1,11 +1,24 @@
 function menu() {
   var ui = SpreadsheetApp.getUi();
-  // Create a main menu item
-  ui.createMenu('Generate Certificate')
-      .addItem('Process Certs', 'processContent')
-      .addItem("Process Letters", "letters")
-      .addItem("Create Labels", "labels")
-      .addToUi();
+  var mainMenu = ui.createMenu('Attendance Sheets');
+
+  // Cert Generation
+  var submenu1 = ui.createMenu('Generate Certificates');
+  submenu1.addItem('Process Certs', 'processContent');
+  submenu1.addItem("Process Letters", "letters");
+  submenu1.addItem("Create Labels", "labels");
+  mainMenu.addSubMenu(submenu1);
+
+  // Sending Notifications
+  var submenu2 = ui.createMenu('Notifications');
+  submenu2.addItem('Send Sponsor Emails', 'sponsorEmail')
+  mainMenu.addSubMenu(submenu2);
+
+  // Updates
+  var submenu3 = ui.createMenu('Updates');
+  submenu3.addItem('Update Learners from Bookeo', 'updateSheetFromBookeo');
+  mainMenu.addSubMenu(submenu3);
+  mainMenu.addToUi();
 }
 
 function processCerts(){
@@ -48,4 +61,12 @@ function processLetters(){
 
 function processLabels(){
   generateLabels();
+}
+
+function sendSponsorEmail(){
+  emailDailyAttendanceRecord();
+}
+
+function updateSheetFromBookeo(){
+  updateFromBookeo();
 }

@@ -244,9 +244,9 @@ function emailDailyAttendanceRecord(){
       sponsors[index].students.push(student);
     }
   }
-  if(!settings.numSessions){
+  if(!settings.sessions){
   if(compareTimestampsForSameDate(settings.startDate, settings.endDate)){
-      settings.numSessions = 1;
+      settings.sessions = 1;
     }
   }
   Logger.log(sponsors);

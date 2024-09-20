@@ -1,45 +1,45 @@
 class CourseDetails {
-    constructor(moduleName, deliveryMode, tutorName, studentDetails, events, startDate, end) {
-        this.moduleName = moduleName;
-        this.tutorName = tutorName;
-        this.studentDetails = studentDetails;
-        this.deliveryMode = deliveryMode;
-        this.events = events;
-        this.startDate = startDate;
-        this.end = end;
-    }
-    courseId(){
-        //get headders
-        let courseId = "NA";
-        for(i in this.courseData){
-            if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
-            courseId = this.courseData[i][2];
-            }
-        }
-        return courseId;
-    }
-    sessions(){
-      let courseData = this.events;
-      let sessions = 4;
-      for(i in courseData){
-          if(courseData[i][0].trim().includes(this.moduleName.trim())){
-              sessions = courseData[i][1];
+  constructor(moduleName, deliveryMode, tutorName, studentDetails, events, startDate, end) {
+      this.moduleName = moduleName;
+      this.tutorName = tutorName;
+      this.studentDetails = studentDetails;
+      this.deliveryMode = deliveryMode;
+      this.events = events;
+      this.startDate = startDate;
+      this.end = end;
+  }
+  courseId(){
+      //get headders
+      let courseId = "NA";
+      for(i in this.courseData){
+          if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
+          courseId = this.courseData[i][2];
           }
       }
-      if(sessions == 0){
-        return 4;
-      }
-      return sessions;
+      return courseId;
+  }
+  sessions(){
+    let courseData = this.events;
+    let sessions = 4;
+    for(i in courseData){
+        if(courseData[i][0].trim().includes(this.moduleName.trim())){
+            sessions = courseData[i][1];
+        }
     }
-    getEnd(){
-      if(this.end){
-        return this.end;
-      } else {
-        let endDate = new Date(this.startDate);
-        Date.setDate(date.getDate()+(7*sessions()));
-        return endDate;
-      }
+    if(sessions == 0){
+      return 4;
     }
+    return sessions;
+  }
+  getEnd(){
+    if(this.end){
+      return this.end;
+    } else {
+      let endDate = new Date(this.startDate);
+      Date.setDate(date.getDate()+(7*sessions()));
+      return endDate;
+    }
+  }
 }
 
 class StudentDetails {
@@ -96,7 +96,7 @@ class StudentDetails {
   }
 
   class ModuleDetails {
-    constructor(moduleName, deliveryMode, tutorName, bookingIds, courseData, startDate, endDate, settings) {
+    constructor(moduleName, deliveryMode, tutorName, bookingIds, courseData, startDate, endDate, settings, events=[]) {
       this.moduleName = moduleName;
       this.deliveryMode = deliveryMode;
       this.tutorName = tutorName;
@@ -105,6 +105,7 @@ class StudentDetails {
       this.startDate = startDate;
       this.endDate = endDate;
       this.settings = settings;
+      this.events = events;
     }
     courseId(){
       //get headders
@@ -115,79 +116,80 @@ class StudentDetails {
           }
       }
       return courseId;
-  }
-  sessions(){
-    let courseData = this.events;
-    let sessions = 4;
-    for(i in courseData){
-        if(courseData[i][0].trim().includes(this.moduleName.trim())){
-            sessions = courseData[i][1];
-        }
     }
-    if(sessions == 0){
-      return 4;
-    }
-    return sessions;
-  }
-  getEnd(){
-    if(this.endDate){
-      return this.endDate;
-    } else {
-      let endDate = new Date(this.startDate);
-      endDate.setDate(endDate.getDate()+(7*this.sessions()));
-      return endDate;
-    }
-  }
-  getLearners(){
-    let learnerArray = [];
-    const uniqueBookingIds= []
-    for(let bookingId of this.bookingIds){
-      if(uniqueBookingIds.includes(bookingId)){
-        continue;
-      } else {
-        uniqueBookingIds.push(bookingId);
-      }
-    }
-    for(let bookingId of uniqueBookingIds){
-      let booking = getBookingById(bookingId);
-      let sponsor = booking.customer.emailAddress;
-      let learners = booking.participants.details;
-      for(let learner of learners){
-        let email, firstName, lastName, address, phone;
-        if(learner.personId == "PUNKNOWN"){
-          email = "";
-          firstName = "";
-          lastName = "";
-          address = "";
-          phone = "";
-        } else {
-          firstName = learner.personDetails.firstName;
-          lastName = learner.personDetails.lastName;
-          try{email = learner.personDetails.emailAddress;}
-          catch(e) {email = "";}
-          try{address = learner.personDetails.streetAddress.address1+"\n"+learner.personDetails.streetAddress.address2;}
-          catch(e) {address = "";}
-          try{
-            for(numbers of learner.personDetails.phoneNumbers){
-              phone+=numbers.type+":"+numbers.number+"\n";
-            }
+    sessions(){
+      let courseData = this.courseData;
+      let sessions = 4;
+      for(i in courseData){
+          if(courseData[i][0].trim().includes(this.moduleName.trim())){
+              sessions = courseData[i][1];
           }
-          catch(e) {phone = "";}
-        }
-        let personNumber = learner.categoryIndex;
-        let learnerDetails = new LearnerDetails(firstName, lastName, email, sponsor, address, phone, bookingId, personNumber);
-        learnerArray.push(learnerDetails);
+      }
+      if(sessions == 0){
+        return 4;
+      }
+      return sessions;
+    }
+    getEnd(){
+      if(this.endDate){
+        return this.endDate;
+      } else {
+        let endDate = new Date(this.startDate);
+        endDate.setDate(endDate.getDate()+(7*this.sessions()));
+        return endDate;
       }
     }
-    return learnerArray;
-  }
-  issuedOn(){
-    let issuedOnDate = new Date(this.getEnd());
-    return issuedOnDate;
-  }
-  renewsOn(){
-    let issuedOnDate = new Date(this.getEnd());
-    let renewsOnDate = new Date(issuedOnDate.setFullYear(issuedOnDate.getFullYear()+settings.renewalDuration))
-    return renewsOnDate;
-  }
+    getLearners(){
+      let learnerArray = [];
+      const uniqueBookingIds= []
+      for(let bookingId of this.bookingIds){
+        if(uniqueBookingIds.includes(bookingId)){
+          continue;
+        } else {
+          uniqueBookingIds.push(bookingId);
+        }
+      }
+      for(let bookingId of uniqueBookingIds){
+        let booking = getBookingById(bookingId);
+        let sponsor = booking.customer.emailAddress;
+        let learners = booking.participants.details;
+        for(let learner of learners){
+          let email, firstName, lastName, address, phone;
+          if(learner.personId == "PUNKNOWN"){
+            email = "";
+            firstName = "";
+            lastName = "";
+            address = "";
+            phone = "";
+          } else {
+            firstName = learner.personDetails.firstName;
+            lastName = learner.personDetails.lastName;
+            try{email = learner.personDetails.emailAddress;}
+            catch(e) {email = "";}
+            try{address = learner.personDetails.streetAddress.address1+"\n"+learner.personDetails.streetAddress.address2;}
+            catch(e) {address = "";}
+            try{
+              for(numbers of learner.personDetails.phoneNumbers){
+                phone+=numbers.type+":"+numbers.number+"\n";
+              }
+            }
+            catch(e) {phone = "";}
+          }
+          let personNumber = learner.categoryIndex;
+          let learnerDetails = new LearnerDetails(firstName, lastName, email, sponsor, address, phone, bookingId, personNumber);
+          learnerDetails.productId = booking.productId;
+          learnerArray.push(learnerDetails);
+        }
+      }
+      return learnerArray;
+    }
+    issuedOn(){
+      let issuedOnDate = new Date(this.getEnd());
+      return issuedOnDate;
+    }
+    renewsOn(){
+      let issuedOnDate = new Date(this.getEnd());
+      let renewsOnDate = new Date(issuedOnDate.setFullYear(issuedOnDate.getFullYear()+settings.renewalDuration))
+      return renewsOnDate;
+    }
 }

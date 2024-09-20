@@ -111,6 +111,7 @@ function buildStudentObject(studentArray, settings){
     if(headers[i].includes("Letter")){letterCol = Number(i);}
     if(headers[i].includes("Cert")){certCol = Number(i);}
     if(headers[i].includes("Tutor")){tutorCol = Number(i);}
+    if(headers[i].includes("Skills Demo")){skillsCol = Number(i);}
   }
   const students = [];
   for(i in studentArray){
@@ -127,6 +128,7 @@ function buildStudentObject(studentArray, settings){
     let tutor = studentArray[i][tutorCol];
     let student = new Student(name, email, date, paid, coursePassed, sent, letter, cert, tutor);
     if(studentArray[i][sponsorCol] != null){student.sponsor = studentArray[i][sponsorCol];}
+    if(skillsCol != null){student.skills = studentArray[i][skillsCol];}
     students.push(student)
   }
   return students;

@@ -280,8 +280,8 @@ function triggerBuild(){
     };
     opSheets.push(opCourse);
   }
-  emailAttendanceSheets(email, opSheets);
-  publishAttendanceSheets(opSheets);
+  //emailAttendanceSheets(email, opSheets);
+  //publishAttendanceSheets(opSheets);
 }
 
 function emailAttendanceSheets(email, opSheets){

@@ -71,11 +71,12 @@ function compileCourses(ssId){
 }
 
 function testCompileCourses(){
-    const ssId = "1ccGcxkl_GwYk3WIGcxwsQSRR0VdAkYWTUNN3gcwh3_0";
-    const courses = compileCourses(ssId);
-    for(course of courses){
-      buildAttendanceSheet(course);
-    }
+  const ssId = "1RYs9q9wnoTyL_EdrdpGIchOlNgOn1pmh6ekwyygaZlw"; //4 sessions
+  //const ssId = "1ccGcxkl_GwYk3WIGcxwsQSRR0VdAkYWTUNN3gcwh3_0"; //One Session
+  const courses = compileCourses(ssId);
+  for(course of courses){
+    buildAttendanceSheet(course);
+  }
 }
 
 function extractCourseFromSheet(){
