@@ -128,7 +128,14 @@ function buildStudentObject(studentArray, settings){
     let tutor = studentArray[i][tutorCol];
     let student = new Student(name, email, date, paid, coursePassed, sent, letter, cert, tutor);
     if(studentArray[i][sponsorCol] != null){student.sponsor = studentArray[i][sponsorCol];}
-    if(skillsCol != null){student.skills = studentArray[i][skillsCol];}
+    try{
+      if(skillsCol != null){
+        student.skills = studentArray[i][skillsCol];
+      }
+    }
+    catch(e){
+      student.skills = true;
+    }
     students.push(student)
   }
   return students;

@@ -326,10 +326,12 @@ function testgetCourseSettings(){
 }
 
 function updateFromBookeo(){
+  Logger.log("Updating Sheet from Bookeo");
   const sheet = getStudentArray();
   const studentArray = sheet.getDataRange().getValues();
-  let headers = studentArray.shift()
-  let bookings = []; 
+  Logger.log("Finding Header Indexes");
+  let headers = studentArray.shift();
+  let bookings = [];
   let nameIndex, emailIndex, dateIndex, paidIndex, 
     coursePassedIndex, sentIndex, sponsorIndex, 
     letterIndex, certIndex, bookingIdIndex, tutorIndex, 
@@ -350,22 +352,33 @@ function updateFromBookeo(){
     if(headers[i].includes("Address")){addressIndex = Number(i);}
     if(headers[i].includes("Phone")){phoneIndex = Number(i);}
   }
+
   for(let i=0; i<studentArray.length; i++){
-    if(bookings.includes(studentArray[i][bookingIdIndex])){
-      continue;
-    } else {
-      bookings.push(studentArray[i][bookingIdIndex]);
-    }
+    Logger.log("Checking Booking for: "+studentArray[i][nameIndex]);
     let learner = studentArray[i];
-    let bookeoLearner = getLearnerDetails(learner[bookingIdIndex], learner[personNumberIndex]);
+    let bookeoLearner;
+    let bookingDetails = getBookingById(learner[bookingIdIndex]);
+    const personDetails = bookingDetails.participants.details;
+    for(person of personDetails){
+      if(person.categoryIndex == studentArray[i][personNumberIndex]){
+        bookeoLearner = person;
+        break;
+      }
+    }
+    Logger.log("Bookeo Learner Details"+bookeoLearner);
     let row = i+2;
     sheet.getRange(row, nameIndex+1).setValue(bookeoLearner.personDetails.firstName + " " + bookeoLearner.personDetails.lastName);
     sheet.getRange(row, emailIndex+1).setValue(bookeoLearner.personDetails.emailAddress);
     let address = bookeoLearner.personDetails.streetAddress.address1+"\n"+bookeoLearner.personDetails.streetAddress.address2
     sheet.getRange(row, addressIndex+1).setValue(address);
     let phone="";
-    for(numbers of bookeoLearner.personDetails.phoneNumbers){
-      phone+=numbers.type+":"+numbers.number+"\n";
+    try{
+      for(numbers of bookeoLearner.personDetails.phoneNumbers){
+        phone+=numbers.type+":"+numbers.number+"\n";
+      }
+    }
+    catch(e){
+      Logger.log(e);
     }
     sheet.getRange(row, phoneIndex+1).setValue(phone);
   }
