@@ -16,6 +16,7 @@
     <table>
         <tr>
             <th>Name</th>
+            <th>Assignment Submitted</th>
     <? for(i=0; i<content.settings.sessions; i++){ ?>
             <th>Session <?=i+1?></th>
             <th>Session <?=i+1?> Notes</th>
@@ -24,6 +25,7 @@
         <? for (student of content.sponsor.students){ ?>
           <tr>
             <td><?=student.name?></td>
+            <td><?= tickOrCross(student.assignmentSubmitted) ?></td>
             <? for (i=0; i<content.settings.sessions; i++){ 
               let sessionNumber = i+1;?>
               <td><?= tickOrCross(student["Session "+sessionNumber])?></td>

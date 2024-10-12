@@ -193,6 +193,7 @@ function emailNewCert(pdf, student, settings){
 }
 
 function getAttendanceRecords(){
+  Logger.log("Getting Attendance Records");
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const settings = getSettings(ss.getId());
   const sheet = ss.getSheets()[0];
@@ -202,10 +203,14 @@ function getAttendanceRecords(){
   //find list of students and their attendance records
   const records = [];
   for(i=6; i<attendanceData.length; i++){
+    if(attendanceData[i][1].includes("Additional Tutor or Sales Team Comments")){
+      break;
+    }
     let student = {
       name: attendanceData[i][0],
-      settings: settings
-    }
+      settings: settings,
+      assignmentSubmitted: attendanceData[i][2]
+    };
     for(j=1; j<attendanceData[i].length; j++){
       if(attendanceData[i][j] === true || attendanceData[i][j] === false){
         let session = attendanceData[2][j];
@@ -214,16 +219,14 @@ function getAttendanceRecords(){
       }
     }
     for(row of generatorData){
-      if(row[0] === student.name){
+      if(row[0].trim() === student.name.trim()){
         student.sponsor = row[2];
         student.bookingId = row[12];
         student.number = row[13];
+        break;
       }
     }
-    if(student.name.trim() !== ""){
-      records.push(student);
-    } else {
-    }
+    records.push(student);
   }
   return records;
 }
@@ -239,7 +242,10 @@ function emailDailyAttendanceRecord(){
         email: student.sponsor,
         students: [student]
       };
-      sponsors.push(sponsor);
+      if(sponsor.email != null){
+        sponsors.push(sponsor);
+      }
+      
     } else {
       sponsors[index].students.push(student);
     }
@@ -249,8 +255,8 @@ function emailDailyAttendanceRecord(){
       settings.sessions = 1;
     }
   }
-  Logger.log(sponsors);
   for(sponsor of sponsors){
+    Logger.log(sponsor.email);
     let customer = getCustomerDetails(sponsor.students[0].bookingId);
     Logger.log(customer);
     sponsor.name = customer.firstName+" "+customer.lastName;

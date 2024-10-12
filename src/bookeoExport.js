@@ -206,13 +206,12 @@ function getBookingById(bookingId){
   let url = `${apiUrlBase}bookings/${bookingId}?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
   url+= "&expandCustomer=true";
   url+= "&expandParticipants=true";
+  Logger.log("Get booking by ID URL: "+url);
 
   // Fetch data from Bookeo API
   const response = UrlFetchApp.fetch(url);
   const bookingsData = JSON.parse(response.getContentText());
 
-
-  Logger.log(url);
   return bookingsData;
 }
 
