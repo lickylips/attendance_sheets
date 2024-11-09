@@ -280,8 +280,7 @@ function emailDailyAttendanceRecord(){
   }
   for(sponsor of sponsors){
     Logger.log(sponsor.email);
-    const apiKey = getBookeoApiKeys();
-    let customer = bookeoLibrary.getCustomerDetails(sponsor.students[0].bookingId, apiKey.apiKey, apiKey.secretKey);
+    let customer = getCustomerDetails(sponsor.students[0].bookingId);
     Logger.log(customer);
     sponsor.name = customer.firstName+" "+customer.lastName;
     let template = HtmlService.createTemplateFromFile("attendanceRecordEmail");

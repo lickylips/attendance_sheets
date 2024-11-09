@@ -1,12 +1,3 @@
-//get the bookeo API and Secret Keys
-function getBookeoApiKeys() {
-  let keys = {
-      apiKey: PropertiesService.getScriptProperties().getProperty('BOOKEO_API_KEY'),
-      secretKey: PropertiesService.getScriptProperties().getProperty('BOOKEO_SECRET_KEY')
-  };
-  return keys;
-}
-
 function getBookeoBookingsForDate(date, productId) {
   if(!date) {
     //date = new Date();
