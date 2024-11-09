@@ -192,6 +192,7 @@ function emailNewCert(pdf, student, settings){
   MailApp.sendEmail(email);
 }
 
+
 function getAttendanceRecords(){
   Logger.log("Getting Attendance Records");
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -202,8 +203,10 @@ function getAttendanceRecords(){
   const generatorData = generatorSheet.getDataRange().getValues();
   //find list of students and their attendance records
   const records = [];
-  for(i=6; i<attendanceData.length; i++){
-    if(attendanceData[i][1].includes("Additional Tutor or Sales Team Comments")){
+  const sessions = {}; // Object to track attendance for each session
+
+  for (let i = 6; i < attendanceData.length; i++) {
+    if (attendanceData[i][1].includes("Additional Tutor or Sales Team Comments")) {
       break;
     }
     let student = {
@@ -211,15 +214,23 @@ function getAttendanceRecords(){
       settings: settings,
       assignmentSubmitted: attendanceData[i][2]
     };
-    for(j=1; j<attendanceData[i].length; j++){
-      if(attendanceData[i][j] === true || attendanceData[i][j] === false){
+    for (let j = 1; j < attendanceData[i].length; j++) {
+      if (attendanceData[i][j] === true || attendanceData[i][j] === false) {
         let session = attendanceData[2][j];
-        student[session]=attendanceData[i][j];
-        student[session+"notes"]=attendanceData[i][j+1];      
+        student[session] = attendanceData[i][j];
+        student[session + "notes"] = attendanceData[i][j + 1];
+        // Initialize session attendance if not already
+        if (!sessions[session]) {
+          sessions[session] = false; 
+        }
+        // If any student attends the session, mark it as true
+        if (attendanceData[i][j] === true) {
+          sessions[session] = true;
+        }
       }
     }
-    for(row of generatorData){
-      if(row[0].trim() === student.name.trim()){
+    for (row of generatorData) {
+      if (row[0].trim() === student.name.trim()) {
         student.sponsor = row[2];
         student.bookingId = row[12];
         student.number = row[13];
@@ -228,11 +239,23 @@ function getAttendanceRecords(){
     }
     records.push(student);
   }
+
+  // Filter out sessions where all students are marked false
+  for (let i = 0; i < records.length; i++) {
+    for (let session in sessions) {
+      if (sessions[session] === false) {
+        delete records[i][session];
+        delete records[i][session + "notes"];
+      }
+    }
+  }
+
   return records;
 }
 
 function emailDailyAttendanceRecord(){
   const records = getAttendanceRecords();
+  Logger.log(records);
   const sponsors = [];
   const settings = records[0].settings;
   for(student of records){
@@ -257,7 +280,8 @@ function emailDailyAttendanceRecord(){
   }
   for(sponsor of sponsors){
     Logger.log(sponsor.email);
-    let customer = getCustomerDetails(sponsor.students[0].bookingId);
+    const apiKey = getBookeoApiKeys();
+    let customer = bookeoLibrary.getCustomerDetails(sponsor.students[0].bookingId, apiKey.apiKey, apiKey.secretKey);
     Logger.log(customer);
     sponsor.name = customer.firstName+" "+customer.lastName;
     let template = HtmlService.createTemplateFromFile("attendanceRecordEmail");

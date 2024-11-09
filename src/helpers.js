@@ -76,6 +76,7 @@ function getSettings(docId){
   }
 
   function splitName(fullName) {
+    Logger.log("Splitting Name "+fullName);
     if (!fullName || typeof fullName !== 'string') {
       return ['', '']; // Return empty strings if input is invalid
     }
@@ -162,7 +163,10 @@ function getSettings(docId){
     if(boolian){
       return "✅";
     }
-    else{
+    else if (boolian == false){
       return "❌";
+    }
+    else{
+      return "";
     }
   }
