@@ -90,29 +90,9 @@ function extractEmail(input) {
   function tutorNotificationEmail(course, url){
     Logger.log("Sending tutor notification email");
     //tutor email look up
-    const tutorSheetId = "1FtKPRTCxCZSSv2vGngOJnx8n-AA6POCz2pXPAvW5jZ0";
-    const tutorSS = SpreadsheetApp.openById(tutorSheetId);
-    const tutorSheet = tutorSS.getSheetByName("Sheet1");
-    const tutorData = tutorSheet.getDataRange().getValues();
-    let primaryEmail, secondaryEmail;
-    for(row of tutorData){
-      if(row[0].includes(course.tutorName)  && row[0].trim() !== ""){
-        Logger.log("Found Tutor "+row[0])
-        if (row[2].charAt(0) === '<'){
-          primaryEmail = row[2].replace(/[<>]/g, '');
-        } else {
-          primaryEmail = row[2];
-        }
-        Logger.log("Primary Email: "+primaryEmail);
-        if (row[1].charAt(0) === '<'){
-          secondaryEmail = row[1].replace(/[<>]/g, '');
-        } else {
-          secondaryEmail = row[1];
-        }
-        Logger.log("Secondary Email: "+secondaryEmail);
-      }
-    }
-
+    let tutorEmails = getTutorDetails(course.tutorName);
+    let primaryEmail = tutorEmails.primaryEmail;
+    let secondaryEmail = tutorEmails.secondaryEmail;
     let tutorEmail;
     if(primaryEmail != "" && secondaryEmail != ""){
       tutorEmail = primaryEmail+", "+secondaryEmail;
@@ -291,9 +271,9 @@ function emailDailyAttendanceRecord(){
     const message = template.evaluate().getContent();
     const mail = {
       to: sponsor.email,
-      //cc: "sales@ncutraining.ie",
-      cc: "sean.obrien@ncutraining.ie", //for testing
-      replyTo: "info@ncutraining.ie",
+      cc: "sales@ncutraining.ie",
+      //cc: "sean.obrien@ncutraining.ie", //for testing
+      replyTo: "sales@ncutraining.ie",
       subject: "Daily Attendance Record",
       htmlBody: message
     }

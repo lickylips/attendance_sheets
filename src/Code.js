@@ -284,37 +284,6 @@ function triggerBuild(){
   //publishAttendanceSheets(opSheets);
 }
 
-function emailAttendanceSheets(email, opSheets){
-  Logger.log("Emailing Results to "+ email);
-  let template = HtmlService.createTemplateFromFile("emailBody");
-  const urls = [];
-  const locations = [];
-  const tutor = [];
-  const courseName = [];
-  for(i in opSheets){
-    urls.push(opSheets[i].sheet);
-    locations.push(opSheets[i].course.deliveryMode);
-    tutor.push(opSheets[i].course.tutorName);
-    courseName.push(opSheets[i].course.moduleName);
-  }
-  const messageContent = {
-    urls: urls,
-    locations: locations,
-    tutor: tutor,
-    courseName: courseName
-  }
-  template.messageContent = messageContent;
-  const message = template.evaluate().getContent();
-  const today = Utilities.formatDate(new Date(), "GMT", "dd/MM/yyyy");
-  const mail = {
-    to: email,
-    replyTo: "info@ncultd.ie",
-    subject: "Upcoming Course Attendance Sheets for "+today,
-    htmlBody: message
-  }
-  MailApp.sendEmail(mail);
-}
-
 function publishAttendanceSheets(opSheets){
   Logger.log("Publishing Attendance Sheets");
   const docId = "1jIZB4ywPC2CDlgSbWx7Muqbsm27Q9DoVBg4uVEvai_0";

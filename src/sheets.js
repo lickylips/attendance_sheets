@@ -102,7 +102,7 @@ function createCertGenerator(docId, course){
                      .setFontColor("#4B3A71")
                      .setWrap(true)
                      .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
-  sheet.getRange(2,9).setValue(course.deliveryMode)
+  sheet.getRange(2,9).setValue(course.getDeliveryMethod())
                      .setFontWeight("bold")
                      .setBorder(true, true, true, true, true, true, "#4B3A71", SpreadsheetApp.BorderStyle.SOLID);
   sheet.getRange(2,9,1,6).merge();
@@ -386,7 +386,7 @@ function createSettingsSheet(docId, course, folderId){
     const emailRow = ["emailCert", false, "Should the cert be emailed upon generation"];
     settingsSheet.appendRow(emailRow);
     //delivery Mode 
-    const deliveryModeRow = ["deliveryMode", course.deliveryMode, "Delivery mode of the cert, either Online or Printed"];
+    const deliveryModeRow = ["deliveryMode", course.getDeliveryMethod(), "Delivery mode of the cert, either Online or Printed"];
     settingsSheet.appendRow(deliveryModeRow);
     //tutor
     const tutorRow = ["tutor", course.tutorName, "Name of the tutor"];

@@ -11,6 +11,11 @@
         "userSymbol": "AdminDirectory",
         "version": "directory_v1",
         "serviceId": "admin"
+      },
+      {
+        "userSymbol": "Classroom",
+        "version": "v1",
+        "serviceId": "classroom"
       }
     ],
     "libraries": [

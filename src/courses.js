@@ -12,7 +12,7 @@ function compileCourses(ssId){
       tutorIndex, firstNameIndex, startDateIndex, 
       sponsorIndex, endIndex, address1Index, 
       address2Index, cityIndex, homePhoneIndexIndex,
-      mobilePhoneIndexIndex, bookingNumberIndex;
+      mobilePhoneIndexIndex, bookingNumberIndex, productCodeIndex;
     for(i in data[0]){
       if(data[0][i].includes("Course")){courseIndex = Number(i);}
       if(data[0][i].includes("Participants (details)")){participantIndex = Number(i);}
@@ -30,10 +30,10 @@ function compileCourses(ssId){
       if(data[0][i].includes("Participant - Telephone (home)")){homePhoneIndexIndex = Number(i);}
       if(data[0][i].includes("Participant - Telephone (mobile)")){mobilePhoneIndexIndex = Number(i);}
       if(data[0][i].includes("Booking number")){bookingNumberIndex = Number(i);}
+      if(data[0][i].includes("Product code")){productCodeIndex = Number(i);}
     }
     data.shift(); //drop header row
     //find all courses on this date
-    let courseData = getCourseData();
     const courseKeys = [];
     const courses = [];
     for(row of data){
@@ -51,7 +51,7 @@ function compileCourses(ssId){
           row[locationIndex],
           row[tutorIndex],
           [row[bookingNumberIndex]],
-          courseData,
+          row[productCodeIndex],
           gmtStartDate,
           gmtEndDate
         );

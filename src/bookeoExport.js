@@ -331,6 +331,17 @@ function testgetCourseSettings(){
   Logger.log(courseSettings);
 }
 
+function getDocumentGeneratorData(ss){
+  Logger.log("Getting Document Generator Data");
+  //Check if Spreadsheet is passed in
+  if(!ss){
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
+  //Find Document Generator Sheet
+  sheet = getDocumentGeneratorSheet(ss);
+  
+}
+
 function updateFromBookeo(){
   Logger.log("Updating Sheet from Bookeo");
   //Get Sheet info

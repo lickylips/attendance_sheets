@@ -108,27 +108,39 @@ class StudentDetails {
       this.events = events;
     }
     courseId(){
-      //get headders
-      let courseId = "NA";
-      for(i in this.courseData){
-          if(this.courseData[i][0].trim().includes(this.moduleName.trim())){
-          courseId = this.courseData[i][2];
-          }
+      let courseData = this.courseData;
+      let courseDataArray = courseData.split("-");
+      if(courseDataArray.length > 1){
+        return courseDataArray[0];
+      }else {
+        return courseDataArray;
       }
-      return courseId;
     }
     sessions(){
       let courseData = this.courseData;
-      let sessions = 4;
-      for(i in courseData){
-          if(courseData[i][0].trim().includes(this.moduleName.trim())){
-              sessions = courseData[i][1];
-          }
-      }
-      if(sessions == 0){
+      let courseDataArray = courseData.split("-");
+      if(courseDataArray.length > 1){
+        return courseDataArray[2];
+      }else if(isSameDay(this.startDate, this.endDate)){
+        return 1;
+      } else {
         return 4;
       }
-      return sessions;
+    }
+    getDeliveryMethod(){
+      let courseData = this.courseData;
+      let courseDataArray = courseData.split("-");
+      let deliveryMethod;
+      if(courseDataArray.length > 1){
+        deliveryMethod = courseDataArray[1];
+      } else {
+        deliveryMethod = "Not Available";
+      }
+
+      if(deliveryMethod == "OL"){return  "Online";}
+      else if(deliveryMethod == "IC"){return "In Class";}
+      else if(deliveryMethod == "BL"){return "Blended";}
+      else {return "Not Available";}
     }
     getEnd(){
       if(this.endDate){

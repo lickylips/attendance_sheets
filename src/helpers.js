@@ -35,6 +35,21 @@ function getSettings(docId){
     return studentsSheet;
   }
 
+  function getDocumentGeneratorSheet(ss){
+    if(!ss){
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    }
+    let studentsSheet;
+    studentsSheet = ss.getSheetByName("Document Generator");
+    if(studentsSheet == null){
+      //create sheet
+      Logger.log("Document Generator Not Present")
+      studentsSheet = ss.getSheetByName("Cert Generator");
+      studentsSheet.setName("Document Generator");
+    }
+    return studentsSheet;
+  }
+
   function getOrCreateCertsFolder(parentFolderId) {
     var parentFolder = DriveApp.getFolderById(parentFolderId);
     var existingCerts = parentFolder.getFoldersByName("Certs");
@@ -169,4 +184,13 @@ function getSettings(docId){
     else{
       return "";
     }
+  }
+
+  function isSameDay(date1, date2) {
+    // Check if the year, month, and day are the same for both dates
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
   }
