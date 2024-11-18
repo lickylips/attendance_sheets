@@ -90,19 +90,8 @@ function extractEmail(input) {
   function tutorNotificationEmail(course, url){
     Logger.log("Sending tutor notification email");
     //tutor email look up
-    let tutorEmails = getTutorDetails(course.tutorName);
-    let primaryEmail = tutorEmails.primaryEmail;
-    let secondaryEmail = tutorEmails.secondaryEmail;
-    let tutorEmail;
-    if(primaryEmail != "" && secondaryEmail != ""){
-      tutorEmail = primaryEmail+", "+secondaryEmail;
-    } else if(primaryEmail != "" && secondaryEmail==""){
-      tutorEmail = primaryEmail;
-    } else if(secondaryEmail != ""  && primaryEmail == ""){
-      tutorEmail = secondaryEmail;
-    } else {
-      tutorEmail = "sales@ncutraining.ie";
-    }
+    let tutorEmails = getTutorEmail(course.tutorName);
+    let tutorEmail = tutorEmails.primaryEmail;
     course.tutorEmail = tutorEmail;
     Logger.log("Tutor Emails: "+tutorEmail)
     let template = HtmlService.createTemplateFromFile("tutorEmail");

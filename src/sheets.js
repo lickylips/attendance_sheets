@@ -235,7 +235,7 @@ function createChainOfCustody(docId, course){
   startRow++;
 
   //Logo
-  const logoUrl = "https://lickylip.net/wp-content/uploads/2023/09/21-small.png";
+  const logoUrl = "https://glinnationalcollege.ie/wp-content/uploads/2024/11/21-small.png";
   const image = SpreadsheetApp.newCellImage()
                               .setSourceUrl(logoUrl)
                               .build();
@@ -437,7 +437,7 @@ function createSignInSheet(docId, course){
   startRow++;
 
   //Logo
-  const logoUrl = "https://lickylip.net/wp-content/uploads/2023/09/21-small.png";
+  const logoUrl = "https://glinnationalcollege.ie/wp-content/uploads/2024/11/21-small.png";
   const image = SpreadsheetApp.newCellImage()
                               .setSourceUrl(logoUrl)
                               .build();

@@ -19,6 +19,11 @@ function menu() {
   submenu3.addItem('Update Learners from Bookeo', 'updateSheetFromBookeo');
   submenu3.addItem('Update Bookeo from Sheet', 'updateBookeoFromSheet');
   mainMenu.addSubMenu(submenu3);
+
+  // EA Submission
+  var submenu4 = ui.createMenu('EA Submission');
+  submenu4.addItem('Submit EA', 'submitEa');
+  mainMenu.addSubMenu(submenu4);
   mainMenu.addToUi();
 }
 

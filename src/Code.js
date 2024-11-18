@@ -36,6 +36,7 @@ function buildAttendanceSheet(course) {
     Logger.log("Error sending tutor notification email");
     Logger.log(err);
   }
+  buildFolder(datedFolder, course);
   return opSheetUrl;
 }
 
@@ -350,4 +351,14 @@ function testDate(){
   sheet = ss.getSheetByName("Main");
   data = sheet.getDataRange().getValues();
   Logger.log(data);
+}
+
+function buildFolder(datedFolder, course){
+  let learners = course.getLearners();
+  for(learner of learners){
+    let learnerFolder = datedFolder.createFolder(learner.getName());
+    let skillsDemoFolder = learnerFolder.createFolder("Skills Demo");
+    let assignmentFolder = learnerFolder.createFolder("Assignment");
+    let examFolder = learnerFolder.createFolder("Exam");
+  }
 }
