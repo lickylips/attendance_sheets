@@ -269,3 +269,30 @@ function emailDailyAttendanceRecord(){
     MailApp.sendEmail(mail);
   }
 }
+
+function emailEaSubmission(settings, selectedFolder) {
+  // Get the active spreadsheet's URL
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  let ssUrl = ss.getUrl();
+
+  // Get the selected folder's URL
+  let selectedFolderUrl = selectedFolder.getUrl();
+
+  // Construct the email subject
+  let subject = `EA Submission for ${settings.courseName}`;
+
+  // Construct the email body
+  let body = `The EA submission for <a href="${ssUrl}">${settings.courseName}</a> 
+              (starting on ${settings.startDate}) has been completed 
+              and is available in the following folder: <a href="${selectedFolderUrl}">${selectedFolder.getName()}</a>
+
+              You can access the attendance spreadsheet here: <a href="${ssUrl}">${ss.getName()}</a>`;
+
+  // Send the email
+  MailApp.sendEmail({
+    to: "sales@ncutraining.ie",
+    subject: subject,
+    htmlBody: body
+  });
+  Logger.log("Sales team notified by email.");
+}

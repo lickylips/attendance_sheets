@@ -10,11 +10,12 @@ function generateCert(content, settings){
     date = content.issuedOn();
   }
   const dateFormatted = Utilities.formatDate(date, "GMT", "MMMMM dd, yyyy")
+  //find output folder (learner name)
+  const parentFolderId = getSpreadsheetFolder();
+  const learnerFolderID = findOrCreateLearnersFolder(parentFolderId, content.name);
+  const outputFolder = DriveApp.getFolderById(learnerFolderID);
   //Get cert template & copy
-  const outputFolderId = settings.exportFolder
-  const outputFolder = DriveApp.getFolderById(outputFolderId);
   const templateId = "157JQpm3_-es0zCTpe4Zyl_fRUUkdtnI-ybKDMpnOUF8";
-  
   const template = DriveApp.getFileById(templateId);
   const newCertDeck = template.makeCopy().setName(todayFormatted+" - "+content.name+" - "+settings.courseName);
   const newCertId = newCertDeck.getId();

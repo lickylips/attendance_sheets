@@ -63,6 +63,20 @@ function getSettings(docId){
       return newCertsFolder.getId();
     }
   }
+
+  function findOrCreateLearnersFolder(parentFolderId, learnerName) {
+    var parentFolder = DriveApp.getFolderById(parentFolderId);
+    var existingFolders = parentFolder.getFoldersByName(learnerName);
+  
+    if (existingFolders.hasNext()) {
+      // Learner folder exists, return its ID
+      return existingFolders.next().getId();
+    } else {
+      // Learner folder doesn't exist, create it and return the ID
+      var newLearnerFolder = parentFolder.createFolder(learnerName);
+      return newLearnerFolder.getId();
+    }
+  }
   
   /**
    * getOrCreateDatedFolder
@@ -193,4 +207,18 @@ function getSettings(docId){
       date1.getMonth() === date2.getMonth() &&
       date1.getDate() === date2.getDate()
     );
+  }
+
+  function getSpreadsheetFolder() {
+    // Get the active spreadsheet
+    var ss = SpreadsheetApp.getActiveSpreadsheet(); 
+  
+    // Get the file object associated with the spreadsheet
+    var file = DriveApp.getFileById(ss.getId());
+  
+    // Get the folder containing the file
+    var parentFolder = file.getParents().next(); 
+  
+    // Return the folder ID 
+    return parentFolder.getId(); 
   }

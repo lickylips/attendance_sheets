@@ -355,10 +355,12 @@ function testDate(){
 
 function buildFolder(datedFolder, course){
   let learners = course.getLearners();
+  let parentFolderId = datedFolder.getId();
   for(learner of learners){
-    let learnerFolder = datedFolder.createFolder(learner.getName());
-    let skillsDemoFolder = learnerFolder.createFolder("Skills Demo");
-    let assignmentFolder = learnerFolder.createFolder("Assignment");
-    let examFolder = learnerFolder.createFolder("Exam");
+    let learnerFolderID = findOrCreateLearnersFolder(parentFolderId, learner.getName());
+    let learnerFolder = DriveApp.getFolderById(learnerFolderID);
+    learnerFolder.createFolder("Skills Demo");
+    learnerFolder.createFolder("Assignment");
+    learnerFolder.createFolder("Exam");
   }
 }

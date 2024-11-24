@@ -385,6 +385,7 @@ function createSettingsSheet(docId, course, folderId){
     //email cert
     const emailRow = ["emailCert", false, "Should the cert be emailed upon generation"];
     settingsSheet.appendRow(emailRow);
+    settingsSheet.getRange("B7").insertCheckboxes();
     //delivery Mode 
     const deliveryModeRow = ["deliveryMode", course.getDeliveryMethod(), "Delivery mode of the cert, either Online or Printed"];
     settingsSheet.appendRow(deliveryModeRow);
@@ -406,7 +407,11 @@ function createSettingsSheet(docId, course, folderId){
       const sessionsRow = ["sessions", numSessions, "Number of sessions in the course"];
       settingsSheet.appendRow(sessionsRow);
     }
-    settingsSheet.getRange("B7").insertCheckboxes();
+    //EA Submission setting
+    const eaRow = ["eaSubmission", false, "Has the course be submitted to EA"];
+    settingsSheet.appendRow(eaRow);
+    settingsSheet.getRange("B13").insertCheckboxes();
+    
     settingsSheet.setFrozenRows(1);
     //move sheet to end
     ss.moveActiveSheet(ss.getNumSheets());

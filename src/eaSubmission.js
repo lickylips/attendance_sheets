@@ -53,6 +53,8 @@ function createLinkedFolder() {
         courseFolder.createShortcut(attendanceFolder.getId());
   
         Logger.log('Link created successfully!');
+        Logger.log("Emailing Sales Team");
+        emailEaSubmission(settings, selectedFolder)
       } else {
         ui.alert('Invalid folder number.');
       }
