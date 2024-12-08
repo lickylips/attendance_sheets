@@ -14,7 +14,7 @@ function createCertGenerator(docId, course){
     //Header row
     let headers = ["Name", "Email", "Sponsor Contact", 
                    "Tutor", "Date", "Paid", "Course Passed", 
-                   "Sent", "Cert", "Letter",
+                   "Sent", "Results Sent","Cert", "Letter",
                    "Address", "Phone", "Booking ID", "Person Number"];
     certSheet.appendRow(headers);
     //Student Rows
@@ -33,6 +33,7 @@ function createCertGenerator(docId, course){
         false,
         false,
         false,
+        false,
         "",
         "",
         student.address,
@@ -46,7 +47,7 @@ function createCertGenerator(docId, course){
         studentRow.push("");
       }
       newRow = certSheet.appendRow(studentRow);
-      range = certSheet.getRange(rowNumber, 6, 1, 3);
+      range = certSheet.getRange(rowNumber, 6, 1, 4);
       range.insertCheckboxes();
       rowNumber++;
     }
@@ -194,6 +195,17 @@ function createCertGenerator(docId, course){
     sheet.getRange(studentRow, startCol+1).setValue(student.personNumber);
     studentRow++
   }
+  const lastColumn = sheet.getLastColumn();
+  const formulaCell = sheet.getRange(7, lastColumn + 1); 
+  formulaCell.setFormula('=ARRAYFORMULA(IF(A7:A="",,REGEXMATCH(A7:A,"(?i)"&TEXTJOIN("|",TRUE,\'Form responses 1\'!C:C)&".*(?i)"&TEXTJOIN("|",TRUE,\'Form responses 1\'!D:D))))');
+  const formulaCellRange =  formulaCell.getA1Notation();
+  const learnerNameRange = sheet.getRange(7, 1, sheet.getLastRow() - 6, 1); // Get all learner names starting from row 7
+  const rule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('='+formulaCellRange+' = TRUE') // Formula to check the last column
+    .setBackground("#00FF00") // Set background color to green
+    .setRanges([learnerNameRange])
+    .build();
+  sheet.setConditionalFormatRules([rule]);
   //course footer
   sheet.getRange(studentRow,1).setBackground("#4B3A71");
   sheet.getRange(studentRow,2).setValue("Additional Tutor or Sales Team Comments")

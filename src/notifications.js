@@ -296,3 +296,63 @@ function emailEaSubmission(settings, selectedFolder) {
   });
   Logger.log("Sales team notified by email.");
 }
+
+function emailRegForm(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const formUrl = ss.getFormUrl(); 
+  const emails = [];
+
+  //add emails from doc gen sheet
+  const docGenSheet = ss.getSheetByName("Document Generator");
+  const docGenData = docGenSheet.getDataRange().getValues();
+  let emailCol = docGenData[0].indexOf("Email");
+  for(row of docGenData){
+    addEmail(row[emailCol], emails);
+  }
+
+  //add emails from main sheet
+  const mainSheet = ss.getSheets()[0];
+  const mainSheetData = mainSheet.getDataRange().getValues();
+  emailCol = mainSheetData[3].indexOf("Learner Email");
+  for(row of mainSheetData){
+    addEmail(row[emailCol], emails)
+  }
+
+  Logger.log("Learner Emails: "+emails);
+
+  // Send emails to collected addresses
+  const subject = "Registration Form";
+  const body = `Please fill out the following registration form: ${formUrl}`;
+
+  for (const email of emails) {
+    try {
+      MailApp.sendEmail(email, subject, body);
+      Logger.log("Email sent to " + email);
+    } catch (error) {
+      Logger.log("Error sending email to " + email + ": " + error);
+    }
+  }
+}
+
+function emailResults(learner){
+  Logger.log("sending email for "+learner.firstName+" "+learner.lastName);
+  //check if results already sent
+  if(learner.resultsSent){
+    Logger.log("results already sent");
+    return;
+  }
+  if(learner.email){
+    const template = HtmlService.createTemplateFromFile("resultsEmail");
+    template.learner = learner;
+    const message = template.evaluate().getContent();
+    const subject = "Results for "+learner.firstName+" "+learner.lastName;
+
+    // Use the 'htmlBody' parameter to send HTML content
+    MailApp.sendEmail({
+      to: learner.email,
+      cc: learner.sponsor,
+      subject: subject,
+      htmlBody: message 
+    });
+  }
+}

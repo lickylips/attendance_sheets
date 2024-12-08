@@ -74,6 +74,9 @@ function getSettings(docId){
     } else {
       // Learner folder doesn't exist, create it and return the ID
       var newLearnerFolder = parentFolder.createFolder(learnerName);
+      newLearnerFolder.createFolder("Skills Demo");
+      newLearnerFolder.createFolder("Assignment");
+      newLearnerFolder.createFolder("Exam");
       return newLearnerFolder.getId();
     }
   }
@@ -129,8 +132,24 @@ function getSettings(docId){
   }
 
   function addressStringBuilder(address1, address2, city){
-    const address = address1+"\n"+address2+"\n"+city;
+    let address = "";
+    try{
+      address = address1+"\n"+address2+"\n"+city;
+    }
+    catch(e){
+      address = "";
+    } 
     return address;
+  }
+
+  function phoneStringBuilder(numbers){
+    try{
+      for(number of numbers){
+        phone+=number.type+":"+number.number+"\n";
+      }
+    }
+    catch(e) {phone = "";}
+    return phone;
   }
 
   function addressSplitter(addressString) {
@@ -222,3 +241,70 @@ function getSettings(docId){
     // Return the folder ID 
     return parentFolder.getId(); 
   }
+
+  /**
+ * findTextBox
+ * This function finds a textbox in a slide
+ * @param {!object} slide Slide object of the service health slide
+ * @param {!object} searchText the text to search for
+ * @return {?object} the textbox object
+ */
+function findTextBox(slide, searchText) {
+  const shapes = slide.getShapes();
+
+  for (let i = 0; i < shapes.length; i++) {
+    const shape = shapes[i];
+    if (shape.getText().asString().includes(searchText)) {
+      return shape; // Return the textbox shape when found
+    }
+  }
+
+  return null; // Return null if not found
+}
+
+function checkEmail(email) {
+  // Regular expression for basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+
+  if (emailRegex.test(email)) {
+    Logger.log(email + " is a valid email format.");
+    return true;
+    // Do something if the email is valid
+  } else {
+    Logger.log(email + " is not a valid email format.");
+    return false
+    // Do something if the email is invalid
+  }
+}
+
+function addEmail(email, emailArray) {
+  if (!emailArray.includes(email)) {
+    emailArray.push(email);
+    Logger.log(email + " added to the array.");
+  } else {
+    Logger.log(email + " already exists in the array.");
+  }
+}
+
+function addEmail(email, emailArray) {
+  // Regular expression for basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+
+  if (emailRegex.test(email)) { // Check if it's a valid email format
+    if (!emailArray.includes(email)) { // Check if it already exists
+      emailArray.push(email);
+      Logger.log(email + " added to the array.");
+    } else {
+      Logger.log(email + " already exists in the array.");
+    }
+  } else {
+    Logger.log(email + " is not a valid email format.");
+  }
+}
+
+function downloadImage(url) {
+  const response = UrlFetchApp.fetch(url);
+  const blob = response.getBlob();
+  return blob;
+}
+

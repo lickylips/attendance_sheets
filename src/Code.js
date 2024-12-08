@@ -7,13 +7,6 @@ function buildAttendanceSheet(course) {
   const ssFile = DriveApp.getFileById(ssTemplateId).makeCopy(fileTitle);
   const docId = ssFile.getId();
   const ss = SpreadsheetApp.openById(docId);
-  createAttendanceSheet(docId, course);
-  createChainOfCustody(docId, course);
-  createSignInSheet(docId, course);
-  createCertGenerator(docId, course);
-  createSummarySheet(docId, course);
-  const oldSheet = ss.getSheetByName("Sheet1");
-  ss.deleteSheet(oldSheet);
   const destinationFolderId = findDestinationFolder(course);
   const destinationFolder = DriveApp.getFolderById(destinationFolderId);
   const datedFolder = getOrCreateDatedFolder(destinationFolder, course.startDate);
@@ -29,6 +22,15 @@ function buildAttendanceSheet(course) {
   const opSheet = DriveApp.getFileById(ss.getId());
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(datedFolder);
+  const formId = "1YrqzKZ4x-J_anLcLGqCmwFEYNvrH5sc5dV1Kf5491Lw";  
+  modifyForm(formId, course, ss.getId(), datedFolderId);  
+  createAttendanceSheet(docId, course);
+  createChainOfCustody(docId, course);
+  createSignInSheet(docId, course);
+  createCertGenerator(docId, course);
+  createSummarySheet(docId, course);
+  const oldSheet = ss.getSheetByName("Sheet1");
+  ss.deleteSheet(oldSheet);
   try{
     tutorNotificationEmail(course, opSheetUrl);
   }
@@ -37,6 +39,7 @@ function buildAttendanceSheet(course) {
     Logger.log(err);
   }
   buildFolder(datedFolder, course);
+  
   return opSheetUrl;
 }
 
@@ -357,10 +360,6 @@ function buildFolder(datedFolder, course){
   let learners = course.getLearners();
   let parentFolderId = datedFolder.getId();
   for(learner of learners){
-    let learnerFolderID = findOrCreateLearnersFolder(parentFolderId, learner.getName());
-    let learnerFolder = DriveApp.getFolderById(learnerFolderID);
-    learnerFolder.createFolder("Skills Demo");
-    learnerFolder.createFolder("Assignment");
-    learnerFolder.createFolder("Exam");
+    findOrCreateLearnersFolder(parentFolderId, learner.getName());
   }
 }

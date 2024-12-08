@@ -93,6 +93,11 @@ class StudentDetails {
     getUniqueKey() {
       return `${this.bookingId}-${this.personNumber}`;
     }
+    isBookingPaid() { 
+      let booking = bookeoLibrary.getBookingById(this.bookingId);
+      // Assuming the booking object has a property like "price.totalPaid.amount"
+      return booking.price.totalPaid.amount === booking.price.totalGross.amount; 
+    }
   }
 
   class ModuleDetails {

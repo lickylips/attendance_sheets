@@ -25,7 +25,6 @@ function getBookeoBookingsForDate(date, productId) {
   const bookingsData = JSON.parse(response.getContentText());
 
 
-  Logger.log("Bookings for Date URL: "+url);
   return bookingsData;
 }
   
@@ -58,7 +57,6 @@ function getCoursesForDate(date) {
   // Fetch data from Bookeo API
   const response = UrlFetchApp.fetch(url);
   const courseData = JSON.parse(response.getContentText());
-  Logger.log("Courses for Date API URL: "+url);
 
   return courseData;
 }
@@ -206,7 +204,6 @@ function getBookingById(bookingId){
   let url = `${apiUrlBase}bookings/${bookingId}?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
   url+= "&expandCustomer=true";
   url+= "&expandParticipants=true";
-  Logger.log("Get booking by ID URL: "+url);
 
   // Fetch data from Bookeo API
   const response = UrlFetchApp.fetch(url);
@@ -315,7 +312,6 @@ function getCourseSettings(productId){
 
   // Construct API request URL
   let url = `${apiUrlBase}settings/products?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
-  Logger.log(url);
 
   // Fetch data from Bookeo API 
   const response = UrlFetchApp.fetch(url);

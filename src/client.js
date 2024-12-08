@@ -3,15 +3,18 @@ function menu() {
   var mainMenu = ui.createMenu('Attendance Sheets');
 
   // Cert Generation
-  var submenu1 = ui.createMenu('Generate Certificates');
+  var submenu1 = ui.createMenu('Generate Documents');
   submenu1.addItem('Process Certs', 'processContent');
   submenu1.addItem("Process Letters", "letters");
   submenu1.addItem("Create Labels", "labels");
+  submenu1.addItem("Create Registration Print Sheet", "createRegDoc");
   mainMenu.addSubMenu(submenu1);
 
   // Sending Notifications
   var submenu2 = ui.createMenu('Notifications');
-  submenu2.addItem('Send Sponsor Emails', 'sponsorEmail')
+  submenu2.addItem('Send Sponsor Emails', 'sponsorEmail');
+  submenu2.addItem('Send Reg Form Emails', 'emailRegForm');
+  submenu2.addItem('Send Learner Result Emails', 'emailResults');
   mainMenu.addSubMenu(submenu2);
 
   // Updates
