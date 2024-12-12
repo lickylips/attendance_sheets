@@ -278,15 +278,6 @@ function checkEmail(email) {
 }
 
 function addEmail(email, emailArray) {
-  if (!emailArray.includes(email)) {
-    emailArray.push(email);
-    Logger.log(email + " added to the array.");
-  } else {
-    Logger.log(email + " already exists in the array.");
-  }
-}
-
-function addEmail(email, emailArray) {
   // Regular expression for basic email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
 
@@ -308,3 +299,44 @@ function downloadImage(url) {
   return blob;
 }
 
+//get the bookeo API and Secret Keys
+function getBookeoApiKeys() {
+  let keys = {
+      apiKey: PropertiesService.getScriptProperties().getProperty('BOOKEO_API_KEY'),
+      secretKey: PropertiesService.getScriptProperties().getProperty('BOOKEO_SECRET_KEY')
+  };
+  return keys;
+}
+
+/**
+ * Retrieves the URL of the folder containing a Google Sheet.
+ *
+ * @param {string} spreadsheetId The ID of the Google Sheet.
+ * @return {string|null} The URL of the containing folder, or null if an error occurs.
+ * @customfunction
+ */
+function getSpreadsheetFolderUrl(spreadsheetId) {
+  try {
+    // Get the file metadata for the spreadsheet
+    var file = DriveApp.getFileById(spreadsheetId);
+    var parents = file.getParents();
+
+    // Check if the spreadsheet has any parents
+    if (!parents.hasNext()) {
+      Logger.log("Error: Spreadsheet with ID '" + spreadsheetId + "' has no parent folder.");
+      return null;
+    }
+
+    // Get the parent folder (assuming only one parent)
+    var parentFolder = parents.next();
+
+    //Get the webViewLink of the parent folder
+    var folderUrl = parentFolder.getUrl();
+
+    return folderUrl;
+
+  } catch (error) {
+    Logger.log("An error occurred: " + error);
+    return null;
+  }
+}

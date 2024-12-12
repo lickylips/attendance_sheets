@@ -39,7 +39,7 @@ function buildAttendanceSheet(course) {
     Logger.log(err);
   }
   buildFolder(datedFolder, course);
-  
+  addToTracker(course, ss);
   return opSheetUrl;
 }
 

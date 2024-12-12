@@ -27,22 +27,25 @@ function buildLearnerObject(name, ss){
         //3. Create the Learner object
         const bookingId = row[bookingIdIndex];
         const personNumber = row[personNumberIndex];
-        const booking = bookeoLibrary.getBookingById(bookingId);
+        const keys = getBookeoApiKeys();
+        const booking = bookeoLibrary.getBookingById(bookingId, keys.apiKey, keys.secretKey);
         const participantDetails = booking.participants.details.find(detail => detail.categoryIndex === personNumber);
 
         if (participantDetails) {
             Logger.log(participantDetails.personDetails); // Log the person details
             // Build the address string using the existing function
             let address = "";
-            try{
-              address = addressStringBuilder(
-                participantDetails.streetAddress.address1,
-                participantDetails.streetAddress.address2 || "", // Handle potential missing address2
-                participantDetails.streetAddress.city || "" // Handle potential missing city
-              );
-            }
-            catch(err){
-              Logger.log(err);
+            if(participantDetails.streetAddress){
+              try{
+                address = addressStringBuilder(
+                  participantDetails.streetAddress.address1,
+                  participantDetails.streetAddress.address2 || "", // Handle potential missing address2
+                  participantDetails.streetAddress.city || "" // Handle potential missing city
+                );
+              }
+              catch(err){
+                Logger.log(err);
+              }
             }
             // Build the phone string using the existing function
             const phone = phoneStringBuilder(participantDetails.phoneNumbers);
@@ -64,6 +67,8 @@ function buildLearnerObject(name, ss){
                 row[letterIndex]
             );
             learner.resultsSent = row[resultsIndex];
+            const settings = getSettings(ss.getId());
+            learner.settings = settings;
             return learner;
           } else {
             Logger.log(`Person with ID "${personNumber}" not found in the booking.`);
@@ -73,7 +78,34 @@ function buildLearnerObject(name, ss){
 
 function testBuildLearnerObject(){
   const name = "William Bob";
-  const ss = SpreadsheetApp.openById("1RPGTUZiJ4BUr0mpZLga_udpAa5izSnkn4pBXy5h__Dc")
+  const ss = SpreadsheetApp.openById("1ZOequ0t3RKz45BpM7NqY9MRmS97NGHt3R2gTXvjtUgU")
   const learner = buildLearnerObject(name, ss);
-  Logger.log(learner);
+  const attendance = learner.getAttendanceRecords(ss);
+  Logger.log("learner: "+learner);
+  for(session of attendance.sessions){
+    Logger.log(session.name+" - "+session.present);
+  }
+}
+
+function getLearnerArray(ss){
+  const sheet = ss.getSheetByName("Document Generator");
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const nameIndex = headers.indexOf("Name");
+  data.shift(); // Remove the header row
+  let learners = [];
+  for (const row of data) {
+    const name = row[nameIndex];
+    const learner = buildLearnerObject(name, ss);
+    learners.push(learner);
+  }
+  return learners;
+}
+
+function testGetLearnerArray(){
+  const ss = SpreadsheetApp.openById("1ZOequ0t3RKz45BpM7NqY9MRmS97NGHt3R2gTXvjtUgU");
+  const learners = getLearnerArray(ss);
+  for(learner of learners){
+    Logger.log(learner.name);
+  }
 }

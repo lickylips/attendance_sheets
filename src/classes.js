@@ -94,9 +94,74 @@ class StudentDetails {
       return `${this.bookingId}-${this.personNumber}`;
     }
     isBookingPaid() { 
-      let booking = bookeoLibrary.getBookingById(this.bookingId);
+      let keys = getBookeoApiKeys();
+      let booking = bookeoLibrary.getBookingById(this.bookingId, keys.apiKey, keys.apiSecret);
       // Assuming the booking object has a property like "price.totalPaid.amount"
       return booking.price.totalPaid.amount === booking.price.totalGross.amount; 
+    }
+    getAttendanceRecords(ss) {
+      // get the attendance sheet
+      const sheet = ss.getSheets()[0];
+      const data = sheet.getDataRange().getValues();
+      // find the header indexes 
+      const headers = data[2];
+      const headers2 = data[5];
+      const bookingIdIndex = headers2.indexOf("BookingID");
+      const personNumberIndex = headers2.indexOf("Person Number");
+      const nameIndex = headers.indexOf("Learner Name");
+      const emailIndex = headers.indexOf("Learner Email");
+      const assignmentSubmittedIndex = headers.indexOf("Assignment Submitted");
+      const courseCompletedIndex = headers.indexOf("Course Completed");
+      const lateSubmissionIndex = headers.indexOf("Late Submission");
+      let sessionStart;
+      if(lateSubmissionIndex == -1){
+        sessionStart = courseCompletedIndex;
+      } else {
+        sessionStart = lateSubmissionIndex;
+      }
+      const sessionHeaders = [];
+      Logger.log("Headers: " + headers);
+      for(let i=sessionStart; i<bookingIdIndex; i++){
+        if(headers[i].includes("Session")){
+          let sessionHeader = {
+            name: headers[i],
+            number: headers[i].match(/\d+/)[0], // "1"
+            presentIndex: i,
+            noteIndex: i+1
+          };
+          sessionHeaders.push(sessionHeader);
+        }
+      }
+      //find the booking id
+      let bookingId = this.bookingId;
+      let personNumber = this.personNumber;
+      for(let i=0; i<data.length; i++){
+        if(data[i][bookingIdIndex] == bookingId && data[i][personNumberIndex] == personNumber){
+          Logger.log("Found attendance for " + this.name);
+          let learner = {
+            name: data[i][nameIndex],
+            email: data[i][emailIndex],
+            bookingId: data[i][bookingIdIndex],
+            personNumber: data[i][personNumberIndex],
+            assignmentSubmitted: data[i][assignmentSubmittedIndex],
+            courseCompleted: data[i][courseCompletedIndex],
+            lateSubmission: data[i][lateSubmissionIndex],
+            sessions: []
+          };
+          for(let j=0; j<sessionHeaders.length; j++){
+            let session = sessionHeaders[j];
+            let present = data[i][sessionHeaders[j].presentIndex];
+            let note = data[i][sessionHeaders[j].noteIndex];
+            learner.sessions.push({
+              name: session.name,
+              number: session.number,
+              present: present,
+              note: note
+            });
+          }
+          return learner;
+        }
+      }
     }
   }
 
@@ -208,5 +273,11 @@ class StudentDetails {
       let issuedOnDate = new Date(this.getEnd());
       let renewsOnDate = new Date(issuedOnDate.setFullYear(issuedOnDate.getFullYear()+settings.renewalDuration))
       return renewsOnDate;
+    }
+    getClassId(){
+      let courseCode = this.courseId();
+      let tutor = this.tutorName;
+      let startDate = this.startDate;
+      return courseCode+"-"+tutor+"-"+startDate;
     }
 }
