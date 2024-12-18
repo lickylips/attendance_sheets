@@ -1,149 +1,3 @@
-function getBookeoBookingsForDate(date, productId) {
-  if(!date) {
-    //date = new Date();
-    date = new Date("2024-05-03"); // For testing purposes
-  }
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
-  const apiUrlBase = 'https://api.bookeo.com/v2/'; 
-
-  // Calculate start and end dates for the given day (UTC timezone)
-  const nowUtc = date.toISOString(); // Get current time in ISO 8601 (UTC)
-  const startTime = nowUtc.slice(0, 10) + 'T00:00:00Z'; // Start of today UTC in RFC 3339
-  const endTime = new Date(Date.parse(nowUtc))
-    .toISOString().slice(0, 10) + 'T23:59:59Z'; // Start of next week UTC in RFC 3339
-
-  // Construct API request URL
-  let url = `${apiUrlBase}bookings?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
-  url+= "&expandCustomer=true";
-  url+= "&expandParticipants=true";
-  if(productId) {
-    url+= "&productId="+productId;
-  }
-  // Fetch data from Bookeo API
-  const response = UrlFetchApp.fetch(url);
-  const bookingsData = JSON.parse(response.getContentText());
-
-
-  return bookingsData;
-}
-  
-
-function testGetBookeoBookingsForDate(){
-  const date = new Date("2024-09-17"); // For testing purposes
-  const productId = "2229XUEWF191DB0F6226";
-  const bookings = getBookeoBookingsForDate(date, productId);
-  Logger.log(bookings);
-}
-
-function getCoursesForDate(date) {
-  if(!date) {
-    //date = new Date();
-    date = new Date("2024-05-03"); // For testing purposes
-  }
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
-  const apiUrlBase = 'https://api.bookeo.com/v2/';
-
-  // Calculate start and end dates for the given day (UTC timezone)
-  const nowUtc = date.toISOString(); // Get current time in ISO 8601 (UTC)
-  const startTime = nowUtc.slice(0, 10) + 'T00:00:00Z'; // Start of today UTC in RFC 3339
-  const endTime = new Date(Date.parse(nowUtc))
-    .toISOString().slice(0, 10) + 'T23:59:59Z'; // Start of next week UTC in RFC 3339
-
-  // Construct API request URL
-  let url = `${apiUrlBase}availability/slots?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
-  
-  // Fetch data from Bookeo API
-  const response = UrlFetchApp.fetch(url);
-  const courseData = JSON.parse(response.getContentText());
-
-  return courseData;
-}
-
-function testGetBookeoBookingsForDate(){
-  const date = new Date("2024-09-17");
-  const bookings = getBookeoBookingsForDate(date);
-  Logger.log(bookings);
-}
-
-function buildBookeoCourses(date){
-  if(!date) {
-    //date = new Date();
-    date = new Date("2024-09-17"); // For testing purposes
-  }
-  Logger.log("Getting course data for date: " + date);
-  const courseData = getCoursesForDate(date);
-  const courses = courseData.data;
-  const courseObjects = [];
-  Logger.log("Found " + courses.length + " courses");
-  for(let course of courses){
-    Logger.log("Course: " + course.productId);
-    const sessions = course.courseSchedule.events;
-    const startDate = new Date(course.startTime);
-    const endDate = new Date(sessions[sessions.length-1].endTime);
-    const deliveryMode = course.courseSchedule.title;
-    const tutorName = course.resources[0].name;
-    const bookings = getBookeoBookingsForDate(startDate, course.productId).data;
-    Logger.log("Found " + bookings.length + " bookings");
-    const moduleName = bookings[0].productName;
-    let learners = [];
-    for(let booking of bookings){
-      const sponsor = booking.customer.emailAddress;
-      for(let learner of booking.participants.details){
-        let email, firstName, lastName, address;
-        let phone = "";
-        try{
-          email = learner.personDetails.emailAddress;
-        } 
-        catch(e) {
-          email = "";
-        }
-        try{firstName = learner.personDetails.firstName;}
-        catch(e) {firstName = "";}
-        try{lastName = learner.personDetails.lastName;}
-        catch(e) {lastName = "";}
-        try{address = learner.personDetails.streetAddress.address1+"\n"+learner.personDetails.streetAddress.address2;}
-        catch(e) {address = "";}
-        try{
-          for(numbers of learner.personDetails.phoneNumbers){
-            phone+=numbers.type+":"+numbers.number+"\n";
-          }
-        }
-        catch(e) {phone = "";}
-        const studentDetails = new StudentDetails(firstName, lastName, email, sponsor, address, phone);
-        learners.push(studentDetails);
-      }
-      Logger.log("Booking ID " + booking.bookingNumber + " has " + learners.length + " learners");
-    }
-    const courseObject = new CourseDetails(moduleName, deliveryMode, tutorName, learners, sessions, startDate, endDate);
-    courseObjects.push(courseObject);
-  }
-  Logger.log("Compiled " + courseObjects.length + " courses");
-  return courseObjects;
-}
-
-function buildBookeoCourses2(date){
-  if(!date) {
-    //date = new Date();
-    date = new Date("2024-09-17"); // For testing purposes
-  }
-  const bookings = getBookeoBookingsForDate(date);
-  const productNames = [];
-  for(data of bookings.data){
-    if(productNames.includes(data.productName)){
-      continue;
-    } else {
-      productNames.push(data.productName);
-    }
-  }
-  for(let productName of productNames){
-    Logger.log("Creating "+ productName);
-    Logger.log(bookings);
-  }
-  Logger.log(productNames);
-}
-
 function updateBookeoBookings() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   const data = sheet.getDataRange().getValues();
@@ -193,29 +47,6 @@ function updateBookeoBookings() {
       }
     }
   }
-}
-
-function getBookingById(bookingId){
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
-  const apiUrlBase = 'https://api.bookeo.com/v2/'; 
-
-  // Construct API request URL
-  let url = `${apiUrlBase}bookings/${bookingId}?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
-  url+= "&expandCustomer=true";
-  url+= "&expandParticipants=true";
-
-  // Fetch data from Bookeo API
-  const response = UrlFetchApp.fetch(url);
-  const bookingsData = JSON.parse(response.getContentText());
-
-  return bookingsData;
-}
-
-function testGetBookingById(){
-  const bookingId = "22405213108336";
-  const bookings = getBookingById(bookingId);
-  Logger.log(bookings);
 }
 
 function updateBooking(bookingId, updatedData) {
@@ -305,28 +136,6 @@ function testUpdateBooking(){
   Logger.log(updatedBooking);
 }
 
-function getCourseSettings(productId){
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
-  const apiUrlBase = 'https://api.bookeo.com/v2/';
-
-  // Construct API request URL
-  let url = `${apiUrlBase}settings/products?apiKey=${encodeURIComponent(apiKey)}&secretKey=${encodeURIComponent(secretKey)}`;
-
-  // Fetch data from Bookeo API 
-  const response = UrlFetchApp.fetch(url);
-  const products = JSON.parse(response.getContentText());
-  const product = products.data.find(product => product.productId === productId);
-
-  return product;
-}
-
-function testgetCourseSettings(){
-  const productId = "224XW643R149D19C779C";
-  const courseSettings = getCourseSettings(productId);
-  Logger.log(courseSettings);
-}
-
 function getDocumentGeneratorData(ss){
   Logger.log("Getting Document Generator Data");
   //Check if Spreadsheet is passed in
@@ -370,11 +179,12 @@ function updateFromBookeo(){
     if(headers[i].includes("Phone")){phoneIndex = Number(i);}
   }
 
+  let keys = getBookeoApiKeys();
   for(let i=0; i<studentArray.length; i++){
     Logger.log("Checking Booking for: "+studentArray[i][nameIndex]);
     let learner = studentArray[i];
     let bookeoLearner;
-    let bookingDetails = getBookingById(learner[bookingIdIndex]);
+    let bookingDetails = bookeoLibrary.getBookingById(learner[bookingIdIndex], keys.apiKey, keys.secretKey);
     const personDetails = bookingDetails.participants.details;
     for(person of personDetails){
       if(person.categoryIndex == studentArray[i][personNumberIndex]){
@@ -400,6 +210,13 @@ function updateFromBookeo(){
     let row = i+2;
     let sheetName = sheet.getRange(row, nameIndex+1).getValue();
     Logger.log("Checking sheet name: "+sheetName+" against bookeo name: "+name);
+    //handle if a customer has canceled
+    Logger.log("Checking if learner has cancelled booking");
+    Logger.log(bookingDetails.canceled);
+    if(bookingDetails.canceled == true){
+      Logger.log("Learner has cancelled booking");
+      sheet.deleteRow(row);
+    }
     if(sheetName.trim() != name.trim()){
       //Names Don't Match, Update Names
       Logger.log("Changes required for "+name);
@@ -412,6 +229,8 @@ function updateFromBookeo(){
       Logger.log("No changes required for "+name);
     }
   }
+  //check if there are new learners
+
 }
 
 function updateMainSheet(bookingId, personNumber, name, ss){
@@ -431,54 +250,14 @@ function updateMainSheet(bookingId, personNumber, name, ss){
   }
 }
 
-function getLearnerDetails(bookingId, personNumber){
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
-  const apiUrlBase = 'https://api.bookeo.com/v2/';
-  const booking = getBookingById(bookingId);
-  Logger.log(booking);
-  const personDetails = booking.participants.details;
-  for(person of personDetails){
-    if(person.categoryIndex === personNumber){
-      return person;
-    }
-  }
-  Logger.log(person)
-  return person;
-}
-
 function getCustomerDetails(bookingId){
   const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
   const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
   const apiUrlBase = 'https://api.bookeo.com/v2/';
-  const booking = getBookingById(bookingId);
+  const booking = bookeoLibrary.getBookingById(bookingId);
   const customer = booking.customer;
   Logger.log(customer)
   return customer;
-}
-
-function testgetLearnerDetails(){
-  const bookingId = "22402237741173";
-  const personNumber = 1;
-  const learnerDetails = getLearnerDetails(bookingId, personNumber);
-  Logger.log(learnerDetails);
-}
-
-function testBookeoCompileCourses(){
-  const date = new Date("2024-09-17");
-  let courses = buildBookeoCourses(date);
-  let email = "sean.obrien@ncutraining.ie, suzannefoster@ncutraining.ie, louisedunne@ncutraining.ie, jenniferknott@ncutraining.ie";
-  let opSheets = [];
-  for(course of courses){
-    let opSheet = buildAttendanceSheet(course);
-    let opCourse = {
-      course: course,
-      sheet: opSheet
-    };
-    opSheets.push(opCourse);
-  }
-  //emailAttendanceSheets(email, opSheets);
-  //publishAttendanceSheets(opSheets);
 }
 
 function replaceTextInSheet(sheetName, searchText, replaceText) {
@@ -510,7 +289,7 @@ function updateBookeoNameFromSheet(){
     }
     const bookingId = learnerData[i][bookingIdIndex];
     const personNumber = learnerData[i][personNumberIndex];
-    const booking = getBookingById(bookingId);
+    const booking = bookeoLibrary.getBookingById(bookingId);
     const customerId = booking.customer.id;
     let participant = booking.participants.details.find(p => p.categoryIndex === personNumber);
     const participantId = participant.personId;
@@ -593,4 +372,143 @@ function updateParticipant(customerId, participantId, payload) {
     Logger.log('Error updating booking:', error);
     throw error;
   }
+}
+
+function findBookingsForModule(startDate, moduleName){
+  const keys = getBookeoApiKeys();
+  const date = new Date(startDate);
+  Logger.log(date);
+  let bookings = bookeoLibrary.getBookeoBookingsForDate(date, keys.apiKey, keys.secretKey);
+  const moduleBookings = [];
+  for (let booking of bookings.data) {
+    if (booking.productName.includes(moduleName)) {
+      Logger.log("Found booking("+booking.bookingNumber+") for module: " + booking.productName);
+      moduleBookings.push(booking);
+    }
+  }
+  return moduleBookings;
+}
+
+function testFindBookingsForModule(){
+  const startDate = new Date("2024-09-17");
+  const moduleName = "Test Course";
+  const bookings = findBookingsForModule(startDate, moduleName);
+  Logger.log(bookings);
+}
+
+function updateSpreadsheetFromBookeo() {
+  Logger.log("Updating Spreadsheet from Bookeo");
+  // Build module from sheet
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log("Building module from sheet");
+  const module = buildModuleFromSheet(ss);
+
+  // Get learners existing in the sheet
+  Logger.log("Getting learners from sheet");
+  const sheetLearners = getLearnerArray(ss);
+
+  // Get learners from the module object
+  Logger.log("Getting learners from module");
+  const moduleLearners = module.getLearners();
+
+  // Track removed learners for logging
+  const removedLearners = [];
+
+  // Loop through sheet learners and check for removal
+for (const sheetLearner of sheetLearners) {
+  Logger.log(sheetLearner);
+  const found = moduleLearners.some(moduleLearner => {
+    // Convert both to numbers for strict comparison
+    const sheetBookingId = Number(sheetLearner.bookingId);
+    const sheetPersonNumber = Number(sheetLearner.personNumber);
+    const moduleBookingId = Number(moduleLearner.bookingId);
+    const modulePersonNumber = Number(moduleLearner.personNumber);
+    return moduleBookingId === sheetBookingId && modulePersonNumber === sheetPersonNumber;
+  });
+
+  if (!found) {
+    // Learner not found in module, remove the row
+    const row = sheetLearner.getRows(ss);
+    Logger.log(row);
+    ss.getSheets()[0].deleteRow(row.attendanceSheetRow+1);
+    ss.getSheetByName("Document Generator").deleteRow(row.documentGeneratorRow+1);
+  }
+}
+
+  // Update remaining learners in the sheet
+  const headers = getAllHeaders(ss);
+  const lastRows = findHighestRowNumbers(moduleLearners, ss);
+  for (const learner of moduleLearners) {
+    Logger.log("Reviewing " + learner.name);
+    const rows = learner.getRows(ss);
+    if (rows.attendanceSheetRow === -1) {
+      addAttendanceSheetRow(ss, learner, Number(lastRows.attendance), headers.attendanceHeaders);
+    } else {
+      updateAttendanceSheetRow(ss, learner, rows.attendanceSheetRow, headers.attendanceHeaders);
+    }
+    if(rows.documentGeneratorRow === -1){
+      addDocumentGeneratorRow(ss, learner, Number(lastRows.documentGenerator), headers.documentGeneratorHeaders, module);
+    } else {
+      updateDocumentGeneratorRow(ss, learner, rows.documentGeneratorRow, headers.documentGeneratorHeaders, module);
+    }
+  }
+
+  // Log information about removed learners (if any)
+  if (removedLearners.length > 0) {
+    Logger.log(`Removed learners: ${removedLearners.join(', ')}`);
+  }
+}
+
+function updateAttendanceSheetRow(ss, learner, row, headers){
+  let studentRow = row+1;
+  let sheet = ss.getSheets()[0];
+  sheet.getRange(studentRow, headers.nameIndex+1).setValue(learner.getName());
+  sheet.getRange(studentRow, headers.emailIndex+1).setValue(learner.email);
+  sheet.getRange(studentRow, headers.bookingIdIndex+1).setValue(learner.bookingId);
+  sheet.getRange(studentRow, headers.personNumberIndex+1).setValue(learner.personNumber);
+}
+
+function addAttendanceSheetRow(ss, learner, row, headers){
+  let sheet = ss.getSheets()[0];
+  sheet.insertRowAfter(row+1);
+  let studentRow = row+2;
+  sheet.getRange(studentRow, headers.nameIndex+1).setValue(learner.getName());
+  sheet.getRange(studentRow, headers.emailIndex+1).setValue(learner.email);
+  sheet.getRange(studentRow, headers.assignmentSubmittedIndex+1).insertCheckboxes();
+  sheet.getRange(studentRow, headers.courseCompletedIndex+1).insertCheckboxes();
+  sheet.getRange(studentRow, headers.lateSubmissionIndex+1).insertCheckboxes();
+  for(i=6; i<sheet.getLastColumn(); i++){
+    let test = sheet.getRange(5, i).getValues();
+    if(test[0][0].toString().includes("Present")){
+      sheet.getRange(studentRow, i).insertCheckboxes();
+    }
+  }
+  sheet.getRange(studentRow, headers.bookingIdIndex+1).setValue(learner.bookingId);
+  sheet.getRange(studentRow, headers.personNumberIndex+1).setValue(learner.personNumber);
+}
+
+function updateDocumentGeneratorRow(ss, learner, row, headers, module){
+  let sheet = ss.getSheetByName("Document Generator");
+  let learnerRow = row+1;
+  sheet.getRange(learnerRow, headers.nameIndex+1).setValue(learner.getName());
+  sheet.getRange(learnerRow, headers.emailIndex+1).setValue(learner.email);
+  sheet.getRange(learnerRow, headers.sponsorIndex+1).setValue(learner.sponsor);
+  sheet.getRange(learnerRow, headers.tutorIndex+1).setValue(module.tutorName);
+  sheet.getRange(learnerRow, headers.dateIndex+1).setValue(module.startDate);
+  sheet.getRange(learnerRow, headers.addressIndex+1).setValue(learner.address);
+  sheet.getRange(learnerRow, headers.phoneIndex+1).setValue(learner.phone);
+  sheet.getRange(learnerRow, headers.bookingIdIndex+1).setValue(learner.bookingId);
+  sheet.getRange(learnerRow, headers.personNumberIndex+1).setValue(learner.personNumber);
+  sheet.getRange(learnerRow, headers.paidIndex+1).insertCheckboxes();
+  sheet.getRange(learnerRow, headers.paidIndex+1).setValue(learner.isBookingPaid()).insertCheckboxes();
+  sheet.getRange(learnerRow, headers.sentIndex+1).insertCheckboxes();
+  sheet.getRange(learnerRow, headers.resultsIndex+1).insertCheckboxes();
+
+}
+
+function addDocumentGeneratorRow(ss, learner, row, headers, module){
+  let sheet = ss.getSheetByName("Document Generator");
+  sheet.insertRowAfter(row+1);
+  let learnerRow = row+1;
+  updateDocumentGeneratorRow(ss, learner, learnerRow, headers, module);
 }

@@ -50,10 +50,11 @@ function compileCourses(ssId){
           row[courseIndex],
           row[locationIndex],
           row[tutorIndex],
-          [row[bookingNumberIndex]],
           row[productCodeIndex],
           gmtStartDate,
-          gmtEndDate
+          gmtEndDate,
+          null,
+          [row[bookingNumberIndex]]
         );
         courses.push(course);
       }
@@ -71,7 +72,7 @@ function compileCourses(ssId){
 }
 
 function testCompileCourses(){
-  const ssId = "1RYs9q9wnoTyL_EdrdpGIchOlNgOn1pmh6ekwyygaZlw"; //4 sessions
+  const ssId = "1WlwJS3d1H5JwzzRw3snBxTRpMvz2rSk8x4_Q8q_Ahpg"; //1 session with multiple bookings
   //const ssId = "1ccGcxkl_GwYk3WIGcxwsQSRR0VdAkYWTUNN3gcwh3_0"; //One Session
   const courses = compileCourses(ssId);
   for(course of courses){
@@ -79,51 +80,25 @@ function testCompileCourses(){
   }
 }
 
-function extractCourseFromSheet(){
-  const studentSheet = getStudentArray();
-  const studentArray = studentSheet.getDataRange().getValues();
-  const settings = getSettings();
-  //get headding Indexs
-  let headers = studentArray.shift()
-  let nameIndex, emailIndex, dateIndex, paidIndex, 
-    coursePassedIndex, sentIndex, sponsorIndex, 
-    letterIndex, certIndex, bookingIdIndex, tutorIndex, 
-    addressIndex, phoneIndex, personNumberIndex;
-  for(i in headers){
-    if(headers[i].includes("Name")){ nameIndex = Number(i);}
-    if(headers[i].includes("Email")){ emailIndex = Number(i);}
-    if(headers[i].includes("Date")){ dateIndex = Number(i);}
-    if(headers[i].includes("Paid")){ paidIndex = Number(i);}
-    if(headers[i].includes("Course Passed")){ coursePassedIndex = Number(i);}
-    if(headers[i].includes("Sent")){ sentIndex = Number(i);}
-    if(headers[i].includes("Sponsor Contact")){sponsorIndex = Number(i);}
-    if(headers[i].includes("Letter")){letterIndex = Number(i);}
-    if(headers[i].includes("Cert")){certIndex = Number(i);}
-    if(headers[i].includes("Tutor")){tutorIndex = Number(i);}
-    if(headers[i].includes("Person Number")){personNumberIndex = Number(i);}
-    if(headers[i].includes("Booking ID")){bookingIdIndex = Number(i);}
-    if(headers[i].includes("Address")){addressIndex = Number(i);}
-    if(headers[i].includes("Phone")){phoneIndex = Number(i);}
+function buildModuleFromSheet(ss){
+  const settings = getSettings(ss.getId());
+  //find booking ids for this course
+  const moduleDetails = new ModuleDetails(
+    settings.courseName,
+    settings.location,
+    settings.tutor,
+    settings.courseId,
+    settings.startDate,
+    settings.endDate,
+    settings
+  );
+  return moduleDetails;
+}
+
+function testBuildModuleFromSheet(){
+  const ss = SpreadsheetApp.openById("1taDg6z7Dekk7AjPyouvLZZwCIhbBeJ5GN6J2LJ5xnu4");
+  const moduleDetails = buildModuleFromSheet(ss);
+  for(learner of moduleDetails.getLearners()){
+    Logger.log(learner.name+" on row "+learner.getRows(ss).attendanceSheetRow);
   }
-  const learners = [];
-  for(row of studentArray){
-    let nameParts = splitName(row[nameIndex]);
-    const learner = new Learner(
-      nameParts[0],
-      nameParts[1],
-      row[emailIndex],
-      row[sponsorIndex],
-      row[addressIndex],
-      row[phoneIndex],
-      row[bookingIdIndex],
-      row[personNumberIndex],
-      row[paidIndex],
-      row[coursePassedIndex],
-      row[sentIndex],
-      row[letterIndex],
-      row[certIndex],
-    );
-    learners.push(learner);
-  }
-  return(learners);
 }

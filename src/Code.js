@@ -2,20 +2,30 @@
 
 
 function buildAttendanceSheet(course) {
-  const ssTemplateId = "1cLnKKPwTuMNdA4NnwU0krGjOceXnof6pVeUZo8tS47c";
-  const fileTitle = "["+course.tutorName+"] "+course.moduleName+" - "+course.startDate;
-  const ssFile = DriveApp.getFileById(ssTemplateId).makeCopy(fileTitle);
-  const docId = ssFile.getId();
-  const ss = SpreadsheetApp.openById(docId);
   const destinationFolderId = findDestinationFolder(course);
   const destinationFolder = DriveApp.getFolderById(destinationFolderId);
   const datedFolder = getOrCreateDatedFolder(destinationFolder, course.startDate);
+  const fileTitle = "["+course.tutorName+"] "+course.moduleName+" - "+course.startDate;
   const existingFile = findFileByName(datedFolder, fileTitle);
   if (existingFile) {
     // Rename the existing file with "deprecated-Do Not Use" prefix
     const newFileName = "Deprecated-Do Not Use - " + existingFile.getName();
     existingFile.setName(newFileName);
+    //Remove unneeded form and form slide
+    const files = datedFolder.getFiles();
+    while (files.hasNext()) {
+      const file = files.next();
+      if (file.getName().includes("Registration Form")) {
+        file.setTrashed(true);
+      }
+    }
   }
+  const ssTemplateId = "1cLnKKPwTuMNdA4NnwU0krGjOceXnof6pVeUZo8tS47c";
+  const ssFile = DriveApp.getFileById(ssTemplateId).makeCopy(fileTitle);
+  const docId = ssFile.getId();
+  const ss = SpreadsheetApp.openById(docId);
+  
+  
   const datedFolderId = datedFolder.getId();
   const certFolderId = getOrCreateCertsFolder(datedFolderId);
   createSettingsSheet(docId, course, certFolderId);
@@ -41,17 +51,6 @@ function buildAttendanceSheet(course) {
   buildFolder(datedFolder, course);
   addToTracker(course, ss);
   return opSheetUrl;
-}
-
-function findFileByName(folder, name) {
-  const files = folder.getFiles();
-  while (files.hasNext()) {
-    const file = files.next();
-    if (file.getName() === name) {
-      return file;
-    }
-  }
-  return null;
 }
 
 function findDestinationFolder(course) {
@@ -269,23 +268,6 @@ function processUpload(e){
   }
   emailAttendanceSheets(email, opSheets);
   publishAttendanceSheets(opSheets);
-}
-
-function triggerBuild(){
-  const date = new Date();
-  let courses = buildBookeoCourses(date);
-  let email = "sean.obrien@ncutraining.ie, suzannefoster@ncutraining.ie, louisedunne@ncutraining.ie, jenniferknott@ncutraining.ie";
-  let opSheets = [];
-  for(course of courses){
-    let opSheet = buildAttendanceSheet(course);
-    let opCourse = {
-      course: course,
-      sheet: opSheet
-    };
-    opSheets.push(opCourse);
-  }
-  //emailAttendanceSheets(email, opSheets);
-  //publishAttendanceSheets(opSheets);
 }
 
 function publishAttendanceSheets(opSheets){

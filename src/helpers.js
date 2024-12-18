@@ -340,3 +340,202 @@ function getSpreadsheetFolderUrl(spreadsheetId) {
     return null;
   }
 }
+
+function findFileByName(folder, name) {
+  const files = folder.getFiles();
+  while (files.hasNext()) {
+    const file = files.next();
+    if (file.getName() === name) {
+      return file;
+    }
+  }
+  return null;
+}
+
+/**
+ * Finds the row index in a Google Sheet that contains two specified values anywhere in the row.
+ *
+ * @param {Spreadsheet} ss The Google Sheet object.
+ * @param {any} value1 The first value to search for.
+ * @param {any} value2 The second value to search for.
+ * @return {number} The row index (0-based) of the row containing both values, or -1 if not found. Returns -2 if the sheet is empty.
+ * @customfunction
+ */
+function findRowWithTwoValues(sheet, value1, value2) {
+  try {
+    const data = sheet.getDataRange().getValues();
+
+    if (data.length === 0) {
+      Logger.log("Sheet is empty.");
+      return -2; // Indicate empty sheet
+    }
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].includes(Number(value1)) && data[i].includes(Number(value2))) {
+        return i; // Return the row index (0-based)
+      }
+    }
+
+    return -1; // Return -1 if not found
+  } catch (error) {
+    Logger.log("Error in findRowWithTwoValues: " + error);
+    return -1; // Return -1 in case of any error
+  }
+}
+
+function getDocumentGeneratorHeaders(ss){
+  let sheet = ss.getSheetByName("Document Generator");
+  let data = sheet.getDataRange().getValues();
+  let headers = data[0];
+  let nameIndex, emailIndex, dateIndex, paidIndex, coursePassedIndex, sentIndex, sponsorIndex , letterIndex, certIndex, bookingIdIndex, personNumberIndex, addressIndex, phoneIndex, resultsIndex;
+  for(i in headers){
+    if(headers[i].includes("Name")){ nameIndex = Number(i);}
+    if(headers[i].includes("Email")){ emailIndex = Number(i);}
+    if(headers[i].includes("Date")){ dateIndex = Number(i);}
+    if(headers[i].includes("Paid")){ paidIndex = Number(i);}
+    if(headers[i].includes("Course Passed")){ coursePassedIndex = Number(i);}
+    if(headers[i].includes("Sent")){ sentIndex = Number(i);}
+    if(headers[i].includes("Sponsor Contact")){sponsorIndex = Number(i);}
+    if(headers[i].includes("Letter")){letterIndex = Number(i);}
+    if(headers[i].includes("Cert")){certIndex = Number(i);}
+    if(headers[i].includes("Tutor")){tutorIndex = Number(i);}
+    if(headers[i].includes("Booking ID")){bookingIdIndex = Number(i);}
+    if(headers[i].includes("Person Number")){personNumberIndex = Number(i);}
+    if(headers[i].includes("Address")){addressIndex = Number(i);}
+    if(headers[i].includes("Phone")){phoneIndex = Number(i);}
+    if(headers[i].includes("Results Sent")){resultsIndex = Number(i);}
+  }
+  let headersObj = {
+    nameIndex: nameIndex,
+    emailIndex: emailIndex,
+    dateIndex: dateIndex,
+    paidIndex: paidIndex,
+    coursePassedIndex: coursePassedIndex,
+    sentIndex: sentIndex,
+    sponsorIndex: sponsorIndex,
+    letterIndex: letterIndex,
+    certIndex: certIndex,
+    tutorIndex: tutorIndex,
+    bookingIdIndex: bookingIdIndex,
+    personNumberIndex: personNumberIndex,
+    addressIndex: addressIndex,
+    phoneIndex: phoneIndex,
+    resultsIndex: resultsIndex
+  }
+  return headersObj;
+}
+
+function getResultsHeaders(ss){
+  let sheets = ss.getSheets();
+  let resultsSheets = []
+  for(let sheet of sheets){
+    if(sheet.getName().includes("Results")){
+      resultsSheets.push(sheet)
+    }
+  }
+  let sheet = resultsSheets[0]
+  let data = sheet.getDataRange().getValues();
+
+  // Find the header row
+  let headerRow = -1; // Initialize to an invalid row number
+  for (let i = 0; i < data.length; i++) {
+      if (data[i][0] === "Number") {
+      headerRow = i;
+      break; 
+      }
+  }
+  if (headerRow === -1) {
+      Logger.log("Header row not found");
+      return;
+  }
+  // Extract the data from the header row
+  const headers = data[headerRow];
+  //get header indexes
+  const nameIndex = headers.indexOf("Name");
+  const gradeIndex = headers.indexOf("Grade");
+  const resultsHeaders = {
+    name: nameIndex,
+    grade: gradeIndex
+  }
+  return resultsHeaders;
+}
+
+function getAttendanceHeaders(ss){
+  //find attendanceSheet Headers:
+  const attendanceSheet = ss.getSheets()[0];
+  const attendanceData = attendanceSheet.getDataRange().getValues();
+  // find the header indexes 
+  const headers = attendanceData[2];
+  const headers2 = attendanceData[5];
+  const bookingIdIndex = headers2.indexOf("BookingID");
+  const personNumberIndex = headers2.indexOf("Person Number");
+  const nameIndex = headers.indexOf("Learner Name");
+  const emailIndex = headers.indexOf("Learner Email");
+  const assignmentSubmittedIndex = headers.indexOf("Assignment Submitted");
+  const courseCompletedIndex = headers.indexOf("Course Completed");
+  const lateSubmissionIndex = headers.indexOf("Late Submission");
+  let sessionStart;
+  if(lateSubmissionIndex == -1){
+    sessionStart = courseCompletedIndex;
+  } else {
+    sessionStart = lateSubmissionIndex;
+  }
+  const sessionHeaders = [];
+  for(let i=sessionStart; i<bookingIdIndex; i++){
+    if(headers[i].includes("Session")){
+      let sessionHeader = {
+        name: headers[i],
+        number: headers[i].match(/\d+/)[0], // "1"
+        presentIndex: i,
+        noteIndex: i+1
+      };
+      sessionHeaders.push(sessionHeader);
+    }
+  }
+  let attendanceHeaders = {
+    bookingIdIndex: bookingIdIndex,
+    personNumberIndex: personNumberIndex,
+    nameIndex: nameIndex,
+    emailIndex: emailIndex,
+    assignmentSubmittedIndex: assignmentSubmittedIndex,
+    courseCompletedIndex: courseCompletedIndex,
+    lateSubmissionIndex: lateSubmissionIndex,
+    sessionHeaders: sessionHeaders
+  }
+  return attendanceHeaders;
+}
+
+function getAllHeaders(ss){
+  const attendanceHeaders = getAttendanceHeaders(ss);
+  const resultsHeaders = getResultsHeaders(ss);
+  const documentGeneratorHeaders = getDocumentGeneratorHeaders(ss);
+  //Build full sheet headers object for returning
+  let sheetHeaders = {
+    attendanceHeaders: attendanceHeaders,
+    resultsHeaders: resultsHeaders,
+    documentGeneratorHeaders: documentGeneratorHeaders
+  }
+  return sheetHeaders;
+}
+
+function testGetHeaders(){
+  const ss = SpreadsheetApp.openById("1taDg6z7Dekk7AjPyouvLZZwCIhbBeJ5GN6J2LJ5xnu4");
+  const headers = getHeaders(ss);
+  Logger.log(headers);
+}
+
+function findHighestRowNumbers(learnerArray, ss) {
+  let highestRows = { attendance: -1, documentGenerator: -1 };
+
+  for (const learner of learnerArray) {
+    const rows = learner.getRows(ss); // Assuming `ss` is the spreadsheet object
+    if (rows.attendanceSheetRow > highestRows.attendance) {
+      highestRows.attendance = rows.attendanceSheetRow;
+    }
+    if (rows.documentGeneratorRow > highestRows.documentGenerator) {
+      highestRows.documentGenerator = rows.documentGeneratorRow;
+    }
+  }
+
+  return highestRows;
+}

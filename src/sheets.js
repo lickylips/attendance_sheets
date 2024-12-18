@@ -183,9 +183,11 @@ function createCertGenerator(docId, course){
   //Add Learner Details
   let studentRow = 7;
   //figure out if we're using the old studentDetails or the new getLearners()
+  Logger.log("Student Details: "+course.studentDetails)
   if(course.studentDetails == null){
     course.studentDetails = course.getLearners();
   }
+  Logger.log("Student Details: " + course.studentDetails);
   for(student of course.studentDetails){
     //paste first student row
     let newCheckBoxRange = sheet.getRange(studentRow, 4,1,sheet.getLastColumn());
@@ -432,6 +434,10 @@ function createSettingsSheet(docId, course, folderId){
     const eaRow = ["eaSubmission", false, "Has the course be submitted to EA"];
     settingsSheet.appendRow(eaRow);
     settingsSheet.getRange("B13").insertCheckboxes();
+
+    //Course Code
+    const courseCodeRow = ["courseCode", course.courseData, "Course Code"];
+    settingsSheet.appendRow(courseCodeRow);
     
     settingsSheet.setFrozenRows(1);
     //move sheet to end
@@ -660,3 +666,4 @@ tutorRange.setFontWeight("bold");
 summarySheet.getRange(startRow,2, 1, 2).merge();
 Logger.log("Summary Sheet Created");
 }
+

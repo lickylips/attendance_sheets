@@ -30,7 +30,6 @@ function buildLearnerObject(name, ss){
         const keys = getBookeoApiKeys();
         const booking = bookeoLibrary.getBookingById(bookingId, keys.apiKey, keys.secretKey);
         const participantDetails = booking.participants.details.find(detail => detail.categoryIndex === personNumber);
-
         if (participantDetails) {
             Logger.log(participantDetails.personDetails); // Log the person details
             // Build the address string using the existing function
@@ -72,6 +71,24 @@ function buildLearnerObject(name, ss){
             return learner;
           } else {
             Logger.log(`Person with ID "${personNumber}" not found in the booking.`);
+            //create learner from sheet stuff
+            let name = splitName(row[nameIndex]);
+            const learner = new LearnerDetails(
+              name[0],
+              name[1],
+              "deleted",
+              "deleted",
+              "",
+              "",
+              row[bookingIdIndex],
+              row[personNumberIndex],
+              "",
+              "",
+              false,
+              false,
+              false,
+            );
+            return learner;
           }
     }
 }
@@ -108,4 +125,70 @@ function testGetLearnerArray(){
   for(learner of learners){
     Logger.log(learner.name);
   }
+}
+
+function getBookingCounts(learners) {
+  const bookingCounts = {};
+  for (const learner of learners) {
+    const bookingId = learner.bookingId;
+    if (bookingCounts[bookingId]) {
+      bookingCounts[bookingId]++; // Increment count for existing booking
+    } else {
+      bookingCounts[bookingId] = 1; // Initialize count for new booking
+    }
+  }
+  return bookingCounts;
+}
+
+function addLearnerRowToAttendanceSheet(learner, sheet, studentRow){
+  //paste first student row
+  sheet.getRange(studentRow, 1).setValue(learner.getName());
+  sheet.getRange(studentRow, 2).setValue(learner.email);
+  sheet.getRange(studentRow, 3).insertCheckboxes();
+  sheet.getRange(studentRow, 4).insertCheckboxes();
+  sheet.getRange(studentRow, 5).insertCheckboxes();
+  for(i=6; i<sheet.getLastColumn(); i++){
+    let test = sheet.getRange(5, i).getValues();
+    if(test[0][0].toString().includes("Present")){
+      sheet.getRange(studentRow, i).insertCheckboxes();
+    }
+  }
+  sheet.getRange(studentRow, startCol).setValue(learner.bookingId);
+  sheet.getRange(studentRow, startCol+1).setValue(learner.personNumber);
+}
+
+function buildLearnerObjectByBooking(booking, personNumber){
+  const keys = getBookeoApiKeys();
+  //const booking = bookeoLibrary.getBookingById(booking.id, keys.apiKey, keys.secretKey);
+  const participantDetails = booking.participants.details.find(detail => detail.categoryIndex === personNumber);
+  let phone, address;
+  if (participantDetails) {
+    // Build the address string using the existing function
+    address = "";
+    if(participantDetails.streetAddress){
+      try{
+        address = addressStringBuilder(
+          participantDetails.streetAddress.address1,
+          participantDetails.streetAddress.address2 || "", // Handle potential missing address2
+          participantDetails.streetAddress.city || "" // Handle potential missing city
+        );
+      }
+      catch(err){
+        Logger.log(err);
+      }
+    }
+    // build phone string using existing function
+    phone = phoneStringBuilder(participantDetails.phoneNumbers);
+  }
+  // Create the Learner object
+  const learner = new LearnerDetails(
+      participantDetails.personDetails.firstName,
+      participantDetails.personDetails.lastName,
+      participantDetails.personDetails.emailAddress,
+      booking.customer.emailAddress, // Sponsor email is now retrieved from the booking
+      address,
+      phone,
+      booking.id,
+      personNumber);
+  return learner;    
 }
