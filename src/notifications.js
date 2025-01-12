@@ -162,9 +162,11 @@ function emailNewCert(pdf, student, settings){
 }
 
 
-function getAttendanceRecords(){
+function getAttendanceRecords(ss){
   Logger.log("Getting Attendance Records");
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if(!ss){
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  }
   const settings = getSettings(ss.getId());
   const sheet = ss.getSheets()[0];
   const attendanceData = sheet.getDataRange().getValues();
@@ -201,8 +203,8 @@ function getAttendanceRecords(){
     for (row of generatorData) {
       if (row[0].trim() === student.name.trim()) {
         student.sponsor = row[2];
-        student.bookingId = row[12];
-        student.number = row[13];
+        student.bookingId = row[13];
+        student.number = row[14];
         break;
       }
     }
@@ -222,12 +224,18 @@ function getAttendanceRecords(){
   return records;
 }
 
+function testGetAttendanceRecords(){
+  const ss = SpreadsheetApp.openById("1taDg6z7Dekk7AjPyouvLZZwCIhbBeJ5GN6J2LJ5xnu4");
+  const records = getAttendanceRecords(ss);
+  Logger.log(records[0]);
+}
+
 function emailDailyAttendanceRecord(){
   const records = getAttendanceRecords();
-  Logger.log(records);
   const sponsors = [];
   const settings = records[0].settings;
   for(student of records){
+    Logger.log(student);
     let index = sponsors.findIndex(sponsor => sponsor.email === student.sponsor);
     if(index === -1){
       let sponsor = {

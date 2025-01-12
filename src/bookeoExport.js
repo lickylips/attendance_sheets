@@ -251,10 +251,9 @@ function updateMainSheet(bookingId, personNumber, name, ss){
 }
 
 function getCustomerDetails(bookingId){
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
-  const apiUrlBase = 'https://api.bookeo.com/v2/';
-  const booking = bookeoLibrary.getBookingById(bookingId);
+  Logger.log("Getting Customer Details");
+  const keys = getBookeoApiKeys();
+  const booking = bookeoLibrary.getBookingById(bookingId, keys.apiKey, keys.secretKey);
   const customer = booking.customer;
   Logger.log(customer)
   return customer;

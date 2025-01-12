@@ -306,7 +306,7 @@ class StudentDetails {
       return renewsOnDate;
     }
     getClassId(){
-      let courseCode = this.courseId();
+      let courseCode = this.courseData;
       let tutor = this.tutorName;
       let startDate = this.startDate;
       return courseCode+"-"+tutor+"-"+startDate;

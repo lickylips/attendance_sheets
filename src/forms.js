@@ -36,6 +36,9 @@ function modifyForm(formId, inputData, spreadsheetId, folderId) {
   // 4. Attach Form to Spreadsheet
   form.setDestination(FormApp.DestinationType.SPREADSHEET, spreadsheetId);
 
+  // Set the form to accept responses
+  formFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
   // 5. Move the Response Sheet to the Last Position
   let formResponseSheet = ss.getSheetByName("Form Responses 1");
   ss.moveActiveSheet(ss.getNumSheets()); // Move to the last position

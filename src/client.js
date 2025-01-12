@@ -19,7 +19,7 @@ function menu() {
 
   // Updates
   var submenu3 = ui.createMenu('Updates');
-  submenu3.addItem('Update Learners from Bookeo', 'updateSheetFromBookeo');
+  submenu3.addItem('Update Learners from Bookeo', 'AttendanceSheets.updateSpreadsheetFromBookeo');
   submenu3.addItem('Update Bookeo from Sheet', 'updateBookeoFromSheet');
   mainMenu.addSubMenu(submenu3);
 
