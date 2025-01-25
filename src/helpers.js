@@ -536,6 +536,10 @@ function findHighestRowNumbers(learnerArray, ss) {
       highestRows.documentGenerator = rows.documentGeneratorRow;
     }
   }
+  if(highestRows.attendance == -1){
+    let sheet = ss.getSheets()[0];
+    highestRows.attendance = sheet.getLastRow()-3;
+  }
 
   return highestRows;
 }

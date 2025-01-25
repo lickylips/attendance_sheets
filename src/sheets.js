@@ -208,7 +208,27 @@ function createCertGenerator(docId, course){
   }
   const lastColumn = sheet.getLastColumn();
   const formulaCell = sheet.getRange(7, lastColumn + 1); 
-  formulaCell.setFormula('=ARRAYFORMULA(IF(A7:A="",,REGEXMATCH(A7:A,"(?i)"&TEXTJOIN("|",TRUE,\'Form responses 1\'!C:C)&".*(?i)"&TEXTJOIN("|",TRUE,\'Form responses 1\'!D:D))))');
+  // Build the formula using template literals and escaping strategically
+const formula = `=ARRAYFORMULA(IF(A7:A="",,
+REGEXMATCH(A7:A,
+  "(?i)" & 
+  TEXTJOIN("|", TRUE, 
+    IFERROR(
+      FILTER(TRIM('Form responses 1'!B:B), TRIM('Form responses 1'!B:B)<>""),
+      FILTER(TRIM('Form responses 1'!C:C), TRIM('Form responses 1'!C:C)<>"")
+    )
+  ) & 
+  ".*" & 
+  "(?i)" & 
+  TEXTJOIN("|", TRUE, 
+    IFERROR(
+      FILTER(TRIM('Form responses 1'!C:C), TRIM('Form responses 1'!C:C)<>""),
+      FILTER(TRIM('Form responses 1'!B:B), TRIM('Form responses 1'!B:B)<>"")
+    )
+  )
+)
+))`;
+  formulaCell.setFormula(formula);
   const formulaCellRange =  formulaCell.getA1Notation();
   const learnerNameRange = sheet.getRange(7, 1, sheet.getLastRow() - 6, 1); // Get all learner names starting from row 7
   const rule = SpreadsheetApp.newConditionalFormatRule()
@@ -667,3 +687,32 @@ summarySheet.getRange(startRow,2, 1, 2).merge();
 Logger.log("Summary Sheet Created");
 }
 
+function createCommunicationLog(spreadsheet) {
+  // Check if the "Communication Log" sheet already exists
+  let sheet = spreadsheet.getSheetByName("Communication Log");
+  if (sheet) {
+    Logger.log("Communication Log sheet already exists.");
+    return sheet; // Return the existing sheet
+  }
+
+  // Create a new sheet named "Communication Log"
+  sheet = spreadsheet.insertSheet("Communication Log");
+
+  // Add headers to the sheet
+  sheet.appendRow([
+    "Timestamp",
+    "Sender",
+    "Recipient(s)",
+    "Communication Type",
+    "Subject",
+    "Course Name",
+    "Course Start Date",
+    "Additional Notes"
+  ]);
+
+  // Optionally, format the header row (e.g., bold, background color)
+  sheet.getRange("A1:H1").setFontWeight("bold");
+
+  Logger.log("Communication Log sheet created successfully.");
+  return sheet;
+}

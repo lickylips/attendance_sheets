@@ -141,6 +141,25 @@ function emailLetter(pdf, student, settings){
   }
   if(student.sponsor){email.cc = student.sponsor;}
   MailApp.sendEmail(email);
+  // Get the active spreadsheet
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Get the Communication Log sheet
+  const logSheet = createCommunicationLog(ss); // Assuming you have a helper function to get the sheet
+
+  // Add a new row to the log sheet with the communication details
+  logSheet.appendRow([
+    new Date(), // Timestamp
+    Session.getActiveUser().getEmail(), // Sender
+    content.email, // Recipient
+    "Completion Letter", // Communication Type
+    "Course Completion Letter", // Subject
+    settings.courseName, // Course Name
+    settings.startDate, // Course Start Date
+    "" // Additional Notes (can be left blank or used for any extra information)
+  ]);
+
+  Logger.log("Completion letter emailed and logged successfully.");
 }
 
 function emailNewCert(pdf, student, settings){
@@ -159,6 +178,25 @@ function emailNewCert(pdf, student, settings){
   }
   if(student.sponsor){email.cc = student.sponsor;}
   MailApp.sendEmail(email);
+  // Get the active spreadsheet
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Get the Communication Log sheet
+  const logSheet = createCommunicationLog(ss); // Assuming you have a helper function to get the sheet
+
+  // Add a new row to the log sheet with the communication details
+  logSheet.appendRow([
+    new Date(), // Timestamp
+    Session.getActiveUser().getEmail(), // Sender
+    student.email, // Recipient
+    "New Certificate", // Communication Type
+    "Your Course Certificate", // Subject
+    settings.courseName, // Course Name
+    settings.startDate, // Course Start Date
+    "" // Additional Notes (can be left blank or used for any extra information)
+  ]);
+
+  Logger.log("New certificate emailed and logged successfully.");
 }
 
 
@@ -276,6 +314,25 @@ function emailDailyAttendanceRecord(){
     }
     MailApp.sendEmail(mail);
   }
+  // Get the active spreadsheet
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Get the Communication Log sheet
+  const logSheet = createCommunicationLog(ss); // Assuming you have a helper function to get the sheet
+
+  // Add a new row to the log sheet with the communication details
+  logSheet.appendRow([
+    new Date(), // Timestamp
+    Session.getActiveUser().getEmail(), // Sender
+    "Sponsors", // Recipient(s)
+    "Attendance Records", // Communication Type
+    "Attendance Records", // Subject
+    settings.courseName, // Course Name
+    settings.startDate, // Course Start Date
+    "" // Additional Notes (can be left blank or used for any extra information)
+  ]);
+
+  Logger.log("Attendance records emailed and logged successfully.");
 }
 
 function emailEaSubmission(settings, selectedFolder) {
@@ -340,6 +397,25 @@ function emailRegForm(){
       Logger.log("Error sending email to " + email + ": " + error);
     }
   }
+  // Get the Communication Log sheet
+  const logSheet = createCommunicationLog(ss); // Assuming you have a helper function to get the sheet
+
+  // Add a new row to the log sheet with the communication details
+  // Loop through the emails array and log each email sent
+  for (const email of emails) {
+    logSheet.appendRow([
+      new Date(), // Timestamp
+      Session.getActiveUser().getEmail(), // Sender
+      email, // Recipient
+      "Registration Form", // Communication Type
+      "Registration Form", // Subject (you can customize this if needed)
+      "", // Course Name (not available in this function, so leave blank)
+      "", // Course Start Date (not available in this function, so leave blank)
+      "" // Additional Notes (can be left blank or used for any extra information)
+    ]);
+  }
+
+  Logger.log("Registration form emails sent and logged successfully.");
 }
 
 function emailResults(learner){
@@ -362,5 +438,71 @@ function emailResults(learner){
       subject: subject,
       htmlBody: message 
     });
+  }
+  // Get the active spreadsheet
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Get the Communication Log sheet
+  const logSheet = createCommunicationLog(ss); // Assuming you have a helper function to get the sheet
+
+  // Add a new row to the log sheet with the communication details
+  logSheet.appendRow([
+    new Date(), // Timestamp
+    Session.getActiveUser().getEmail(), // Sender
+    learner.email, // Recipient
+    "Results Email", // Communication Type
+    "Your Course Results", // Subject
+    learner.settings.courseName, // Course Name
+    learner.settings.startDate, // Course Start Date
+    "" // Additional Notes (can be left blank or used for any extra information)
+  ]);
+
+  Logger.log("Results email sent and logged successfully.");
+}
+
+function emailEnrolmentLetters(){
+  //get the in scope date
+  const today = new Date(); // Get today's date
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1); // Subtract one day from today's date
+  
+  //get bookings made or updated on this day
+  const keys = getBookeoApiKeys();
+  const bookings = bookeoLibrary.getBookeoBookingsUpdatedOnDate(yesterday, keys.apiKey, keys.secretKey);
+  Logger.log("Number of Bookings: "+bookings.info.totalItems);
+  if(bookings.info.totalItems == 0){
+    Logger.log("No bookings found");
+    return;
+  } else {
+    Logger.log("Bookings found");
+    //create enrolment letters
+    for (booking of bookings.data) {
+      const enrolmentLetter = createEnrolmentLetter(booking);
+    }
+  }
+  
+}
+
+function createEnrolmentLetter(booking){
+  const customer = booking.customer;
+  Logger.log("Customer: "+customer.firstName+" "+customer.lastName);
+  const bookingDate = Utilities.parseDate(booking.startTime, "GMT", "yyyy-MM-dd'T'HH:mm:ssXXX");
+  Logger.log("Booking Date: "+bookingDate);
+  const date = new Date();
+  for(learner of booking.participants.details){
+    Logger.log("Learner: "+learner.personDetails.firstName+" "+learner.personDetails.lastName);
+    const templateId = "1SnVzOZUM33MW-W8OQXessUxTlHkFFU-A1qmsJ_3vEWk";
+    const exportFolder = DriveApp.getFolderById("15bc1vhg8DFtetJYM503KnbMizyz3tZ4Y");
+    const templateFile = DriveApp.getFileById(templateId);
+    const enrolmentLetterFile = templateFile.makeCopy();
+    enrolmentLetterFile.moveTo(exportFolder);
+    enrolmentLetterFile.setName(Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy") + " - "+learner.personDetails.firstName+" "+learner.personDetails.lastName+" - Enrolment Letter");
+    const enrolmentLetterId = enrolmentLetterFile.getId();
+    const enrolmentLetter = DocumentApp.openById(enrolmentLetterId);
+    const body = enrolmentLetter.getBody();
+    body.replaceText("{{LEARNER NAME}}", learner.personDetails.firstName+" "+learner.personDetails.lastName);
+    body.replaceText("{{DATE}}", Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy"));
+    body.replaceText("{{COURSE NAME}}", booking.productName);
+    body.replaceText("{{START DATE}}", Utilities.formatDate(bookingDate, "GMT", "EEE MMM dd yyyy"));
   }
 }

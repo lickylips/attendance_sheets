@@ -14,7 +14,7 @@ function menu() {
   var submenu2 = ui.createMenu('Notifications');
   submenu2.addItem('Send Sponsor Emails', 'sponsorEmail');
   submenu2.addItem('Send Reg Form Emails', 'emailRegForm');
-  submenu2.addItem('Send Learner Result Emails', 'emailResults');
+  submenu2.addItem('Send Learner Result Emails', 'AttendanceSheets.emailResults');
   mainMenu.addSubMenu(submenu2);
 
   // Updates

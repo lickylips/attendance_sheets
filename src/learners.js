@@ -28,7 +28,9 @@ function buildLearnerObject(name, ss){
         const bookingId = row[bookingIdIndex];
         const personNumber = row[personNumberIndex];
         const keys = getBookeoApiKeys();
+        Logger.log("Getting Booking ID: " + bookingId);
         const booking = bookeoLibrary.getBookingById(bookingId, keys.apiKey, keys.secretKey);
+        Logger.log("Succeded getting Booking ID: " + bookingId);
         const participantDetails = booking.participants.details.find(detail => detail.categoryIndex === personNumber);
         if (participantDetails) {
             Logger.log(participantDetails.personDetails); // Log the person details

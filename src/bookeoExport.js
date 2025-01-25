@@ -279,6 +279,7 @@ function updateBookeoNameFromSheet(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheets()[0];
   const headers = sheet.getRange(6,1,1,sheet.getLastColumn()).getValues();
+  const keys = getBookeoApiKeys();
   const bookingIdIndex = headers[0].indexOf("BookingID");
   const personNumberIndex = headers[0].indexOf("Person Number");
   const learnerData = sheet.getRange(7,1,sheet.getLastRow(),sheet.getLastColumn()).getValues();
@@ -288,7 +289,7 @@ function updateBookeoNameFromSheet(){
     }
     const bookingId = learnerData[i][bookingIdIndex];
     const personNumber = learnerData[i][personNumberIndex];
-    const booking = bookeoLibrary.getBookingById(bookingId);
+    const booking = bookeoLibrary.getBookingById(bookingId, keys.apiKey, keys.secretKey);
     const customerId = booking.customer.id;
     let participant = booking.participants.details.find(p => p.categoryIndex === personNumber);
     const participantId = participant.personId;
@@ -334,9 +335,10 @@ function createBookeoPayload(booking, participantIndex, newFirstName, newLastNam
 
 function updateParticipant(customerId, participantId, payload) {
   // Bookeo API Endpoint and Authentication
+  const keys  = getBookeoApiKeys();
   const apiEndpoint = 'https://api.bookeo.com/v2/customers/'; 
-  const apiKey = 'AXYXHY6PRA3XP7XHU6FNE224NR4XX3148FA63EA11';
-  const secretKey = '5ajggnHkopp3KCWXnHN5BDJRYjK3oweX';
+  const apiKey = keys.apiKey;
+  const secretKey = keys.secretKey;
 
   // Make the API Request
   const options = {
@@ -469,13 +471,15 @@ function updateAttendanceSheetRow(ss, learner, row, headers){
 
 function addAttendanceSheetRow(ss, learner, row, headers){
   let sheet = ss.getSheets()[0];
+  Logger.log("Adding row for " + learner.getName()+" at row " + row);
   sheet.insertRowAfter(row+1);
   let studentRow = row+2;
   sheet.getRange(studentRow, headers.nameIndex+1).setValue(learner.getName());
   sheet.getRange(studentRow, headers.emailIndex+1).setValue(learner.email);
   sheet.getRange(studentRow, headers.assignmentSubmittedIndex+1).insertCheckboxes();
   sheet.getRange(studentRow, headers.courseCompletedIndex+1).insertCheckboxes();
-  sheet.getRange(studentRow, headers.lateSubmissionIndex+1).insertCheckboxes();
+  try{sheet.getRange(studentRow, headers.lateSubmissionIndex+1).insertCheckboxes();}
+  catch(error){Logger.log("Late submission checkbox not found");}
   for(i=6; i<sheet.getLastColumn(); i++){
     let test = sheet.getRange(5, i).getValues();
     if(test[0][0].toString().includes("Present")){
