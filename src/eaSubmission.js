@@ -1,6 +1,6 @@
 function createLinkedFolder() {
     // Get the parent folder ID (replace with your actual folder ID)
-    const parentFolderId = '1_fNaRPPCYb3ZBnEP_AG8934Q3okQHMbc'; 
+    const parentFolderId = '1axUlt8UqqW205nxy3NjGV2sjB8LiTpkw'; 
     const parentFolder = DriveApp.getFolderById(parentFolderId);
   
     // Get a list of all subfolders within the parent folder

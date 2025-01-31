@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <p>Hi <?= customer.firstName ?> <?= customer.lastName ?>,</p>
+    <p>Thank you for your booking with NCU Training.</p>
+    <p>The following learners are now booked onto <?= courseName ?>:</p>
+    <ul>
+      <? for(learner of learners){ ?>
+        <li><?= learner.firstName ?> <?= learner.lastName ?></li>
+      <? } ?>
+    </ul>
+    <p>Please find attached your enrolment letter.</p>
+    <p>Yours</p>
+    <p>The NCU Team</p>
+  </body>
+</html>

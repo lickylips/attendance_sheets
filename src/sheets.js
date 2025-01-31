@@ -396,7 +396,7 @@ function createChainOfCustody(docId, course){
  * @param {object} course 
  * @param {string} folderId 
  */
-function createSettingsSheet(docId, course, folderId){
+function createSettingsSheet(docId, course){
   //create sheet
   Logger.log("Creating settings sheet");
     const ss = SpreadsheetApp.openById(docId);
@@ -422,9 +422,6 @@ function createSettingsSheet(docId, course, folderId){
     //course Dettails
     const detailsRow = ["courseDetails", "", "Details of course to appear on cert"];
     settingsSheet.appendRow(detailsRow);
-    //folder details
-    const folderRow = ["exportFolder", folderId, "ID Of the folder where the certs should go"];
-    settingsSheet.appendRow(folderRow);
     //email cert
     const emailRow = ["emailCert", false, "Should the cert be emailed upon generation"];
     settingsSheet.appendRow(emailRow);

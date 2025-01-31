@@ -27,8 +27,7 @@ function buildAttendanceSheet(course) {
   
   
   const datedFolderId = datedFolder.getId();
-  const certFolderId = getOrCreateCertsFolder(datedFolderId);
-  createSettingsSheet(docId, course, certFolderId);
+  createSettingsSheet(docId, course);
   const opSheet = DriveApp.getFileById(ss.getId());
   const opSheetUrl = opSheet.getUrl();
   opSheet.moveTo(datedFolder);

@@ -2,7 +2,10 @@ function buildCompletionLetter(content, settings) {
   Logger.log("generating letter");
 
   //Make New Letter File
-  const outputFolder = DriveApp.getFolderById(settings.exportFolder);
+  //find output folder (learner name)
+  const parentFolderId = getSpreadsheetFolder();
+  const learnerFolderID = findOrCreateLearnersFolder(parentFolderId, content.name);
+  const outputFolder = DriveApp.getFolderById(learnerFolderID);
   const letterTemplateId = findLetterTemplate(settings.courseName);
   const letterTemplate = DriveApp.getFileById(letterTemplateId);
   let newLetter = letterTemplate.makeCopy();

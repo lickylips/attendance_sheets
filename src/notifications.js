@@ -461,48 +461,126 @@ function emailResults(learner){
 }
 
 function emailEnrolmentLetters(){
-  //get the in scope date
-  const today = new Date(); // Get today's date
+  // Get the in-scope date (yesterday)
+  const today = new Date();
   const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1); // Subtract one day from today's date
-  
-  //get bookings made or updated on this day
+  yesterday.setDate(today.getDate() - 1);
+
+  // Get bookings made or updated yesterday
   const keys = getBookeoApiKeys();
   const bookings = bookeoLibrary.getBookeoBookingsUpdatedOnDate(yesterday, keys.apiKey, keys.secretKey);
-  Logger.log("Number of Bookings: "+bookings.info.totalItems);
-  if(bookings.info.totalItems == 0){
+  Logger.log("Number of Bookings: " + bookings.info.totalItems);
+
+  if (bookings.info.totalItems == 0) {
     Logger.log("No bookings found");
     return;
   } else {
     Logger.log("Bookings found");
-    //create enrolment letters
-    for (booking of bookings.data) {
-      const enrolmentLetter = createEnrolmentLetter(booking);
+    // Create enrollment letters and send emails
+    for (let booking of bookings.data) {
+      try {
+        processBookingsForEnrolment(booking);
+      } catch (error) {
+        Logger.log("Error processing booking: " + error);
+        // Optionally, send an email notification about the error
+      }
     }
   }
-  
 }
 
-function createEnrolmentLetter(booking){
+function processBookingsForEnrolment(booking) {
+  // Prepare document template
+  const templateId = "1SnVzOZUM33MW-W8OQXessUxTlHkFFU-A1qmsJ_3vEWk";
+  const exportFolder = DriveApp.getFolderById("15bc1vhg8DFtetJYM503KnbMizyz3tZ4Y");
+  const templateFile = DriveApp.getFileById(templateId);
   const customer = booking.customer;
-  Logger.log("Customer: "+customer.firstName+" "+customer.lastName);
-  const bookingDate = Utilities.parseDate(booking.startTime, "GMT", "yyyy-MM-dd'T'HH:mm:ssXXX");
-  Logger.log("Booking Date: "+bookingDate);
-  const date = new Date();
-  for(learner of booking.participants.details){
-    Logger.log("Learner: "+learner.personDetails.firstName+" "+learner.personDetails.lastName);
-    const templateId = "1SnVzOZUM33MW-W8OQXessUxTlHkFFU-A1qmsJ_3vEWk";
-    const exportFolder = DriveApp.getFolderById("15bc1vhg8DFtetJYM503KnbMizyz3tZ4Y");
-    const templateFile = DriveApp.getFileById(templateId);
-    const enrolmentLetterFile = templateFile.makeCopy();
-    enrolmentLetterFile.moveTo(exportFolder);
-    enrolmentLetterFile.setName(Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy") + " - "+learner.personDetails.firstName+" "+learner.personDetails.lastName+" - Enrolment Letter");
-    const enrolmentLetterId = enrolmentLetterFile.getId();
-    const enrolmentLetter = DocumentApp.openById(enrolmentLetterId);
-    const body = enrolmentLetter.getBody();
-    body.replaceText("{{LEARNER NAME}}", learner.personDetails.firstName+" "+learner.personDetails.lastName);
-    body.replaceText("{{DATE}}", Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy"));
-    body.replaceText("{{COURSE NAME}}", booking.productName);
-    body.replaceText("{{START DATE}}", Utilities.formatDate(bookingDate, "GMT", "EEE MMM dd yyyy"));
+  const courseName = booking.productName; // Get course name
+
+  Logger.log("Customer: " + customer.firstName + " " + customer.lastName);
+
+  const bookingStartTime = new Date(booking.startTime);
+  const now = new Date();
+  // Check if the booking is in the past and exclude if so
+  if (bookingStartTime < now) {
+    Logger.log("Booking for bookingID: " + booking.bookingNumber + " is in the past. Skipping enrollment letter creation.");
+    return;
   }
+
+  // Check booking against exclusion list and skip if excluded
+  const exclusionList = getExclusionList();
+
+  Logger.log("Booking Date: " + bookingStartTime);
+
+  // Create enrollment letters for each learner
+  const createdLetters = [];
+  const learners = []; // Array to store learner details for the email
+  for (const learner of booking.participants.details) {
+    try {
+      const letter = createEnrolmentLetter(learner, booking, exportFolder, templateFile);
+      createdLetters.push(letter);
+      learners.push(learner.personDetails); // Store learner details
+    } catch (error) {
+      Logger.log("Error processing bookingID: " + booking.bookingNumber + " for learner Number: " + learner.categoryIndex);
+      Logger.log("Error: " + error);
+      // Handle the error as needed (e.g., skip this learner, log the error, etc.)
+    }
+  }
+
+  // Send the email with the enrollment letters
+  if (createdLetters.length > 0) {
+    try {
+      const template = HtmlService.createTemplateFromFile('enrolmentCustomer');
+      template.customer = customer;
+      template.courseName = courseName;
+      template.learners = learners;
+      const htmlBody = template.evaluate().getContent();
+
+      const attachments = createdLetters.map(letter => letter.getAs('application/pdf'));
+
+      MailApp.sendEmail({
+        to: customer.emailAddress,
+        cc: "sales@ncutraining.ie",
+        replyTo: "sales@ncutraining.ie",
+        subject: 'Enrollment Confirmation',
+        htmlBody: htmlBody,
+        attachments: attachments
+      });
+
+      Logger.log("Enrollment letters emailed successfully.");
+    } catch (error) {
+      Logger.log("Error emailing enrollment letters: " + error);
+      // Handle the email sending error as needed
+    }
+  } else {
+    Logger.log("No enrollment letters were created for this booking.");
+  }
+}
+
+function createEnrolmentLetter(learner, booking, exportFolder, templateFile){
+  Logger.log("Learner: "+learner.personDetails.firstName+" "+learner.personDetails.lastName);
+  const date = new Date();
+  const bookingDate = Utilities.parseDate(booking.startTime, "GMT", "yyyy-MM-dd'T'HH:mm:ssXXX");
+  const enrolmentLetterFile = templateFile.makeCopy();
+  enrolmentLetterFile.moveTo(exportFolder);
+  enrolmentLetterFile.setName(Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy") + " - "+learner.personDetails.firstName+" "+learner.personDetails.lastName+" - Enrolment Letter");
+  const enrolmentLetterId = enrolmentLetterFile.getId();
+  const enrolmentLetter = DocumentApp.openById(enrolmentLetterId);
+  const body = enrolmentLetter.getBody();
+  body.replaceText("{{LEARNER NAME}}", learner.personDetails.firstName+" "+learner.personDetails.lastName);
+  body.replaceText("{{DATE}}", Utilities.formatDate(date, "GMT", "EEE MMM dd yyyy"));
+  body.replaceText("{{COURSE NAME}}", booking.productName);
+  body.replaceText("{{START DATE}}", Utilities.formatDate(bookingDate, "GMT", "EEE MMM dd yyyy"));
+  enrolmentLetter.saveAndClose();
+  return enrolmentLetterFile;
+}
+
+function getExclusionList() {
+  const exclusionList = [
+    "222AP7RJ718824D99A75",
+    "Componant Award €20",
+    "QQI Certification Major Award Fee €55",
+    "Special Purpose Award €40",
+    "222U7FHA61841407A7A4"
+  ];
+  return exclusionList;
 }
